@@ -116,3 +116,56 @@ def GL_ACCOUNT_table(request):
             return JsonResponse({"status": 500, "message": "error"})
         finally:
              connection.close()
+             
+             
+             
+#UPDATING - GL_ACCOUNT based on the input 
+@csrf_exempt
+def GL_ACCOUNT_update(request):
+    if request.method == 'POST':
+        try:
+            json_object_list=json.loads(request.body)
+            mycursor=connection.cursor()
+            u_count=0
+            for json_object in json_object_list:
+                key_list=[]
+                for key in json_object:
+                  if json_object[key]=="" or json_object[key]=="NULL":
+                      key_list.append(key)
+                for key in key_list:
+                   json_object.pop(key)
+                s_query="SELECT * FROM GL_ACCOUNT WHERE PRIMARY_ACCOUNT= "+str(json_object["PRIMARY_ACCOUNT"])+";"
+                result=pd.read_sql(s_query,connection)
+                for val in result.values:
+                    count=0
+                    l_dict={}
+                    for col in result.columns:
+                        l_dict[col]=val[count]
+                        count=count+1
+                l_dict["CREATE_DATETIME"]=str(l_dict["CREATE_DATETIME"])
+                u_dict={}
+                if len(l_dict)>0:
+                    for col in json_object:
+                        if col=="PRIMARY_ACCOUNT" or col=="SET_OF_BOOKS_ID":
+                            if Decimal(json_object[col])!=l_dict[col]:
+                                 u_dict[col]=json_object[col]
+                        if json_object[col]!=l_dict[col]:
+                            u_dict[col]=json_object[col]
+                    u_query="UPDATE GL_ACCOUNT SET "
+                    for col in u_dict:
+                        if col=="PRIMARY_ACCOUNT" or col=="SET_OF_BOOKS_ID":
+                            u_query=u_query+str(col)+"="+str(u_dict[col])+","
+                        else:
+                            u_query=u_query+str(col)+"="+"'"+str(u_dict[col])+"'"+","
+                    print(u_query)
+                    u_query=u_query[:-1]+" WHERE PRIMARY_ACCOUNT="+str(json_object["PRIMARY_ACCOUNT"])+";"
+                    print(u_query)
+                    mycursor.execute(u_query)
+                    if mycursor.rowcount >0:
+                        u_count=u_count+1
+                return JsonResponse({"status": 200,"message": f"Records updated: {u_count} "})
+        except Exception as error:
+            return JsonResponse({"status": 500, "message": str(error)})
+        finally:
+            mycursor.close()
+            connection.close()

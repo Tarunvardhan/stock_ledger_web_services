@@ -52,5 +52,6 @@ urlpatterns = [
     path('fetch_item_location_tab/',fetch_item_location),           #Fetch data from ITEM_LOCATION tables
     path('daily_rec/',daily_rec_table),                             #Fetching the data from DAILY SKU based on the input parameters.
     path('retrieve_err_stg_data/',retrieve_err_stg),                #Retrieve filtered data from ERR_TRN_DATA and STG_TRN_DATA table using input parameters user and date.
+    path('GL_ACCOUNT_update/',GL_ACCOUNT_update),                   #UPDATING - GL_ACCOUNT based on the input 
     path('test/',sample)
 ]
