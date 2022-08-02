@@ -54,7 +54,7 @@ def GL_ACCOUNT_table(request):
     if request.method == 'POST':
         try:
             json_object = json.loads(request.body)
-            json_object=json_object[0]
+            #json_object=json_object[0]
             keys=[]
             mycursor=connection.cursor()
             for key1 in json_object:

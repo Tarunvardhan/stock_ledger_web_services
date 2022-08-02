@@ -235,7 +235,8 @@ def trn_data_rev_table(request):
                     list_type1=[]
                     for col2 in d_type:
                         if "decimal" in col2[1]:
-                            list_type.append(col2[0])
+                            if col2=="LOCATION"or col2=="REV_NO":
+                                list_type.append(col2[0])
                     for key1 in rec1:
                         if rec1[key1]==None:
                             list_type1.append(key1)
@@ -488,7 +489,8 @@ def trn_data_rev_1_table(request):
                     list_type1=[]
                     for col2 in d_type:
                         if "decimal" in col2[1]:
-                            list_type.append(col2[0])
+                            if col2=="LOCATION"or col2=="REV_NO":
+                                list_type.append(col2[0])
                     for key1 in rec1:
                         if rec1[key1]==None:
                             list_type1.append(key1)
