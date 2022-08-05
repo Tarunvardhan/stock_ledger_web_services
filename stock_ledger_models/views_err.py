@@ -3,7 +3,7 @@ import csv
 from multiprocessing.connection import Connection
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,DEPT,CLASS,SUBCLASS
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
 from django.http import JsonResponse,HttpResponse,StreamingHttpResponse
 from django.core import serializers
 from datetime import datetime,date
@@ -123,9 +123,9 @@ def del_err_trn_data(request):
                             #Retrieving the record and inserting into STG_TRN_DATA before deleting
                             rec.pop('ERR_MSG')
                             rec.pop('ERR_SEQ_NO')
-                            rec.pop('DEPT')
-                            rec.pop('CLASS')
-                            rec.pop('SUBCLASS')
+                            rec.pop('HIER1')
+                            rec.pop('HIER2')
+                            rec.pop('HIER3')
                     
                             for key in data:
                                 if key in rec:
@@ -213,9 +213,9 @@ def err_trn_data_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.DEPT=DT.DEPT AND ETD.TRN_TYPE=TTD.TRN_TYPE AND CL.CLASS=ETD.CLASS AND SCL.SUBCLASS=ETD.SUBCLASS AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.HIER1=DT.HIER1 AND ETD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=ETD.HIER2 AND SCL.HIER3=ETD.HIER3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.TRN_TYPE=TTD.TRN_TYPE AND ETD.DEPT=DT.DEPT AND CL.CLASS=ETD.CLASS AND SCL.SUBCLASS=ETD.SUBCLASS AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.TRN_TYPE=TTD.TRN_TYPE AND ETD.HIER1=DT.HIER1 AND CL.HIER2=ETD.HIER2 AND SCL.HIER3=ETD.HIER3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
                 
             if len(json_object)==0:
                 query=query[:-4]+';'

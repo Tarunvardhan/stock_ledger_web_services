@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,DEPT,CLASS,SUBCLASS
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
 from django.http import JsonResponse
 from datetime import datetime,date
 from django.views.decorators.csrf import csrf_exempt
@@ -84,9 +84,9 @@ def trn_data_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM TRN_DATA TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.DEPT=DT.DEPT AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.CLASS=TD.CLASS AND SCL.SUBCLASS=TD.SUBCLASS AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.HIER1=DT.HIER1 AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM TRN_DATA TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.DEPT=DT.DEPT AND CL.CLASS=TD.CLASS AND SCL.SUBCLASS=TD.SUBCLASS AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.HIER1=DT.HIER1 AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -155,9 +155,9 @@ def trn_data_history_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM TRN_DATA_HISTORY TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.DEPT=DT.DEPT AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.CLASS=TD.CLASS AND SCL.SUBCLASS=TD.SUBCLASS AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA_HISTORY TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.HIER1=DT.HIER1 AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM TRN_DATA_HISTORY TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.DEPT=DT.DEPT AND CL.CLASS=TD.CLASS AND SCL.SUBCLASS=TD.SUBCLASS AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA_HISTORY TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.HIER1=DT.HIER1 AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -207,7 +207,7 @@ def trn_data_rev_table(request):
                     if json_object[key]=="NULL" or json_object[key]=="":
                         json_object[key]=None
                         keys.append(key)
-                    if key=="ITEM_DESC" or key=="DEPT_DESC" or key=="CLASS_DESC" or key=="SUBCLASS_DESC" or key=="LOCATION_NAME" or key=="TRN_NAME" or key=="ARCHIVE_DATETIME":
+                    if key=="ITEM_DESC" or key=="HIER1_DESC" or key=="HIER2_DESC" or key=="HIER3_DESC" or key=="LOCATION_NAME" or key=="TRN_NAME" or key=="ARCHIVE_DATETIME":
                         keys.append(key)
                 for k in keys:
                     json_object.pop(k)
@@ -463,7 +463,7 @@ def trn_data_rev_1_table(request):
                     if json_object[key]=="NULL" or json_object[key]=="":
                         json_object[key]=None
                         keys.append(key)
-                    if key=="ITEM_DESC" or key=="DEPT_DESC" or key=="CLASS_DESC" or key=="SUBCLASS_DESC" or key=="LOCATION_NAME" or key=="TRN_NAME" or key=="ARCHIVE_DATETIME":
+                    if key=="ITEM_DESC" or key=="HIER1_DESC" or key=="HIER2_DESC" or key=="HIER3_DESC" or key=="LOCATION_NAME" or key=="TRN_NAME" or key=="ARCHIVE_DATETIME":
                         keys.append(key)
                 for k in keys:
                     json_object.pop(k)

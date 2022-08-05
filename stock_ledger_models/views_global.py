@@ -2,7 +2,7 @@ import json
 import csv
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,DEPT,CLASS,SUBCLASS
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
 from django.http import JsonResponse,HttpResponse,StreamingHttpResponse
 from django.core import serializers
 from datetime import datetime,date
@@ -558,7 +558,7 @@ def item_location_valid(request):
             connection.close()
 
 
-# "ITEM","ITEM_DESC","CLASS","DEPT","SUBCLASS" validation from lov_item_dtl . 
+# "ITEM","ITEM_DESC","HIER2","HIER1","HIER3" validation from lov_item_dtl . 
 @csrf_exempt
 def lov_item_dtl(request):
     if request.method == 'POST':
@@ -577,7 +577,7 @@ def lov_item_dtl(request):
            for key in key_list:
                 data.pop(key)
            if  len(data)==0:
-               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.DEPT, DP.DEPT_DESC, ID.CLASS, C.CLASS_DESC, ID.SUBCLASS, SC.SUBCLASS_DESC FROM ITEM_DTL ID, DEPT DP, CLASS C, SUBCLASS SC WHERE DP.DEPT=ID.DEPT AND C.CLASS=ID.CLASS AND SC.SUBCLASS=ID.SUBCLASS ORDER BY ID.DEPT ",connection)#
+               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.HIER1, DP.HIER1_DESC, ID.HIER2, C.HIER2_DESC, ID.HIER3, SC.HIER3_DESC FROM ITEM_DTL ID, HIER1 DP, HIER2 C, HIER3 SC WHERE DP.HIER1=ID.HIER1 AND C.HIER2=ID.HIER2 AND SC.HIER3=ID.HIER3 ORDER BY ID.HIER1 ",connection)#
                res_list=[]                
                for val in result.values:
                    count=0
@@ -590,7 +590,7 @@ def lov_item_dtl(request):
                    return JsonResponse({"Error ":"No Data Found"})
                return JsonResponse(res_list, content_type="application/json",safe=False)
            else:
-               query="SELECT ITEM,ITEM_DESC,DEPT,CLASS,SUBCLASS FROM ITEM_DTL WHERE " 
+               query="SELECT ITEM,ITEM_DESC,HIER1,HIER2,HIER3 FROM ITEM_DTL WHERE " 
                for key in data:
                    if len(data[key])==1:
                        data[key]=(data[key])[0]
