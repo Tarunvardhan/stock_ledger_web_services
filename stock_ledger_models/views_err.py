@@ -183,7 +183,6 @@ def err_trn_data_table(request):
             json_object=json_object[0]
             keys=[]
             mycursor=connection.cursor()
-            print(json_object)
             for key1 in json_object:
                 if isinstance(json_object[key1], list):
                     if (len(json_object[key1]))==0:
@@ -215,10 +214,8 @@ def err_trn_data_table(request):
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
                 query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.DEPT=DT.DEPT AND ETD.TRN_TYPE=TTD.TRN_TYPE AND CL.CLASS=ETD.CLASS AND SCL.SUBCLASS=ETD.SUBCLASS AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
-                print(query)
             else:
                 query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.TRN_TYPE=TTD.TRN_TYPE AND ETD.DEPT=DT.DEPT AND CL.CLASS=ETD.CLASS AND SCL.SUBCLASS=ETD.SUBCLASS AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
-                print(1)
                 
             if len(json_object)==0:
                 query=query[:-4]+';'
@@ -226,7 +223,6 @@ def err_trn_data_table(request):
             else:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
-                print(query)
             res_list=[]
             rec={}
             for val2 in results55.values:

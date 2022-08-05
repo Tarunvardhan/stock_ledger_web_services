@@ -284,6 +284,8 @@ def trn_data_rev_table(request):
                         row["TRAN_SEQ_NO"]=TRANS_NO
                         cols=",".join(map(str, row.keys()))
                         v_list=[]
+                        print(1)
+                        print(row)
                         val=') VALUES('
                         for v in row.values():
                             if v== None:

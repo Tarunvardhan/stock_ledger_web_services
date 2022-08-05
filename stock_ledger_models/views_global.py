@@ -566,7 +566,7 @@ def lov_item_dtl(request):
            data = json.loads(request.body)
            data=data[0]
            key_list=[]
-           mycursor = connection.cursor()
+           #mycursor = connection.cursor()
            #deleting empty input
            for key in data:
                if isinstance(data[key], list):
@@ -576,9 +576,8 @@ def lov_item_dtl(request):
                    key_list.append(key)
            for key in key_list:
                 data.pop(key)
-           
            if  len(data)==0:
-               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.DEPT, DP.DEPT_DESC, ID.CLASS, C.CLASS_DESC, ID.SUBCLASS, SC.SUBCLASS_DESC FROM ITEM_DTL ID, DEPT DP, CLASS C, SUBCLASS SC WHERE DP.DEPT=ID.DEPT AND C.CLASS=ID.CLASS AND SC.SUBCLASS=ID.SUBCLASS;",connection)
+               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.DEPT, DP.DEPT_DESC, ID.CLASS, C.CLASS_DESC, ID.SUBCLASS, SC.SUBCLASS_DESC FROM ITEM_DTL ID, DEPT DP, CLASS C, SUBCLASS SC WHERE DP.DEPT=ID.DEPT AND C.CLASS=ID.CLASS AND SC.SUBCLASS=ID.SUBCLASS ORDER BY ID.DEPT ",connection)#
                res_list=[]                
                for val in result.values:
                    count=0
@@ -591,12 +590,11 @@ def lov_item_dtl(request):
                    return JsonResponse({"Error ":"No Data Found"})
                return JsonResponse(res_list, content_type="application/json",safe=False)
            else:
-               query="SELECT ITEM,ITEM_DESC,DEPT,CLASS,SUBCLASS FROM ITEM_DTL WHERE "
+               query="SELECT ITEM,ITEM_DESC,DEPT,CLASS,SUBCLASS FROM ITEM_DTL WHERE " 
                for key in data:
                    if len(data[key])==1:
                        data[key]=(data[key])[0]
                        query=query+str(key)+" in ("+str(data[key])+") AND "
-                       print(data[key])
                    else:
                        query=query+str(key)+" in "+str(tuple(data[key]))+" AND "
                query=query[:-4]+";"
@@ -617,7 +615,6 @@ def lov_item_dtl(request):
         except Exception as error:
            return JsonResponse({"status": 500, "message": str(error)})
         finally:
-             mycursor.close()
              connection.close()
 
 
@@ -662,8 +659,7 @@ def system_config_table(request):
             else:
                 query=query[:-4]+';'
                 print("2: ",query)
-                results55=pd.read_sql(query,connection)
-                
+                results55=pd.read_sql(query,connection)   
             res_list=[]
             rec={}
             for val2 in results55.values:

@@ -2,7 +2,7 @@ import json
 import csv
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,DEPT,CLASS,SUBCLASS
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
 from django.http import JsonResponse,HttpResponse,StreamingHttpResponse
 from django.core import serializers
 from datetime import datetime,date
@@ -93,9 +93,9 @@ def daily_rollup_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM DAILY_ROLLUP DR,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.DEPT=DT.DEPT AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.CLASS=DR.CLASS AND SCL.SUBCLASS=DR.SUBCLASS AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_ROLLUP DR,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.HIER1=DT.HIER1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=DR.HIER2 AND SCL.HIER3=DR.HIER3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM DAILY_ROLLUP DR,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND DR.DEPT=DT.DEPT AND CL.CLASS=DR.CLASS AND SCL.SUBCLASS=DR.SUBCLASS AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_ROLLUP DR,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND DR.HIER1=DT.HIER1 AND CL.HIER2=DR.HIER2 AND SCL.HIER3=DR.HIER3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -166,9 +166,9 @@ def daily_sku_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM DAILY_SKU DS,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.DEPT=DT.DEPT AND DS.TRN_TYPE=TTD.TRN_TYPE AND CL.CLASS=DS.CLASS AND SCL.SUBCLASS=DS.SUBCLASS AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_SKU DS,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.HIER1=DT.HIER1 AND DS.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=DS.HIER2 AND SCL.HIER3=DS.HIER3 AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.DEPT_DESC,CL.CLASS_DESC,SCL.SUBCLASS_DESC FROM DAILY_SKU DS,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,DEPT DT,CLASS CL,SUBCLASS SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.TRN_TYPE=TTD.TRN_TYPE AND DS.DEPT=DT.DEPT AND CL.CLASS=DS.CLASS AND SCL.SUBCLASS=DS.SUBCLASS AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_SKU DS,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.TRN_TYPE=TTD.TRN_TYPE AND DS.HIER1=DT.HIER1 AND CL.HIER2=DS.HIER2 AND SCL.HIER3=DS.HIER3 AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -239,9 +239,9 @@ def daily_rec_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DR.*,D.DEPT_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM DAILY_REC DR,DEPT D,LOCATION LOC,TRN_TYPE_DTL TTD WHERE DR.DEPT=D.DEPT AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT DR.*,D.HIER1_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM DAILY_REC DR,HIER1 D,LOCATION LOC,TRN_TYPE_DTL TTD WHERE DR.HIER1=D.HIER1 AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT DR.*,D.DEPT_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM DAILY_REC DR,DEPT D,LOCATION LOC,TRN_TYPE_DTL TTD WHERE DR.DEPT=D.DEPT AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT DR.*,D.HIER1_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM DAILY_REC DR,HIER1 D,LOCATION LOC,TRN_TYPE_DTL TTD WHERE DR.HIER1=D.HIER1 AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -250,7 +250,6 @@ def daily_rec_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            print(query)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:

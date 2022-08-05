@@ -2,7 +2,7 @@ import json
 import csv
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,DEPT,CLASS,SUBCLASS
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
 from django.http import JsonResponse,HttpResponse,StreamingHttpResponse
 from django.core import serializers
 from datetime import datetime,date
@@ -66,7 +66,7 @@ def stg_trn(request):
             mycursor = connection.cursor()
             for row in json_object:
                 for key in row:    
-                    if row[key]=="" or row[key]=="NULL":
+                    if row[key]=="" or row[key]=="NULL" or key=="SR_NO":
                         D_keys.append(key) 
                     if key=="LOC":
                         P_keys.append(key)
@@ -178,7 +178,7 @@ def retrieve_err_stg(request):
             data=data[0]
             if "DATE" not in data:
                 data["DATE"]='NULL'
-            query="select * from ((select TRAN_SEQ_NO,PROCESS_IND,ITEM,REF_ITEM,REF_ITEM_TYPE,LOCATION_TYPE,LOCATION,TRN_TYPE,QTY,PACK_QTY,PACK_COST,PACK_RETAIL,UNIT_COST,UNIT_RETAIL,TOTAL_COST,TOTAL_RETAIL,REF_NO2,REF_NO3,REF_NO4,AREF,CURRENCY,CREATE_DATETIME,CREATE_ID,REV_NO,NULL AS ERR_MSG,NULL AS ERR_SEQ_NO,NULL AS CLASS,NULL AS DEPT,NULL AS SUBCLASS,rev_trn_no from stg_trn_data) UNION (select TRAN_SEQ_NO,PROCESS_IND,ITEM,REF_ITEM,REF_ITEM_TYPE,LOCATION_TYPE,LOCATION,TRN_TYPE,QTY,PACK_QTY,PACK_COST,PACK_RETAIL,UNIT_COST,UNIT_RETAIL,TOTAL_COST,TOTAL_RETAIL,REF_NO2,REF_NO3,REF_NO4,AREF,CURRENCY,CREATE_DATETIME,CREATE_ID,REV_NO,ERR_MSG,ERR_SEQ_NO,CLASS,DEPT,SUBCLASS,rev_trn_no from err_trn_data)) ERR_STG where "
+            query="select * from ((select TRAN_SEQ_NO,PROCESS_IND,ITEM,REF_ITEM,REF_ITEM_TYPE,LOCATION_TYPE,LOCATION,TRN_TYPE,QTY,PACK_QTY,PACK_COST,PACK_RETAIL,UNIT_COST,UNIT_RETAIL,TOTAL_COST,TOTAL_RETAIL,REF_NO2,REF_NO3,REF_NO4,AREF,CURRENCY,CREATE_DATETIME,CREATE_ID,REV_NO,NULL AS ERR_MSG,NULL AS ERR_SEQ_NO,NULL AS HIER2,NULL AS HIER1,NULL AS HIER3,rev_trn_no from stg_trn_data) UNION (select TRAN_SEQ_NO,PROCESS_IND,ITEM,REF_ITEM,REF_ITEM_TYPE,LOCATION_TYPE,LOCATION,TRN_TYPE,QTY,PACK_QTY,PACK_COST,PACK_RETAIL,UNIT_COST,UNIT_RETAIL,TOTAL_COST,TOTAL_RETAIL,REF_NO2,REF_NO3,REF_NO4,AREF,CURRENCY,CREATE_DATETIME,CREATE_ID,REV_NO,ERR_MSG,ERR_SEQ_NO,HIER2,HIER1,HIER3,rev_trn_no from err_trn_data)) ERR_STG where "
             #coverting the date format
             if  data["DATE"]=="NULL" or data["DATE"]=="" or data["DATE"]==[] :
                 data.pop("DATE")
@@ -194,7 +194,10 @@ def retrieve_err_stg(request):
                     query=query+" CREATE_ID='"+ (data['USER'])[0]+"' AND"
                 else:
                     query=query+" CREATE_ID"+" in "+str(tuple(data["USER"]))+" AND"
-            query=query[:-4]+";"
+            if len(data)==0:
+                query=query[:-6]+";"
+            else:
+                query=query[:-4]+";"
             result=pd.read_sql(query,connection)
             result =  result.replace(np.NaN, "NULL", regex=True)
             res_list=[]                
