@@ -196,7 +196,7 @@ def retrieve_err_stg(request):
                 start_date =datetime.strptime(data["DATE"],"%Y-%m-%d") 
                 end_date=datetime.combine(start_date, datetime.max.time())
                 query=query+" CREATE_DATETIME BETWEEN '"+ str(start_date)+ "' AND '"+ str(end_date)+"' AND"
-                data.pop["DATE"]
+                data.pop("DATE")
             for key in data:
                 if isinstance(data[key], list):
                     if len(data[key])==1:
@@ -206,6 +206,7 @@ def retrieve_err_stg(request):
                         query=query+key+" in "+str(tuple(data[key]))+" AND "
                 else:
                     query=query+key+"="+str(data[key])
+            data["DATE"]=''
             if len(data)==0:
                 query=query[:-6]+";"
             else:
