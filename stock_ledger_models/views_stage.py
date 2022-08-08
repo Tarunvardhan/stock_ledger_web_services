@@ -171,13 +171,14 @@ def retrieve_stg(request):
 
 
 #Retrieve filtered data from ERR_TRN_DATA and STG_TRN_DATA table using input parameters user and date.
-@csrf_exempt             
+@csrf_exempt            
 def retrieve_err_stg(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             data=data[0]
             key_list=[]
+            count=0
             for key in data:
               if isinstance(data[key], list):
                   if len(data[key])==0:
@@ -185,16 +186,18 @@ def retrieve_err_stg(request):
               if data[key]=="" or data[key]=="NULL":
                   key_list.append(key)
             for key in key_list:
-               data.pop(key) 
+               data.pop(key)
+            data["CREATE_ID"]=data.pop("USER")
             if "DATE" not in data:
                 data["DATE"]='NULL'  
-            query="SELECT * FROM ((SELECT TRAN_SEQ_NO,STG.PROCESS_IND,STG.ITEM,NULL AS ITEM_DESC,STG.REF_ITEM,STG.REF_ITEM_TYPE,STG.LOCATION_TYPE,STG.LOCATION,LOC.LOCATION_NAME,STG.TRN_TYPE,STG.QTY,STG.PACK_QTY,STG.PACK_COST,STG.PACK_RETAIL,STG.UNIT_COST,STG.UNIT_RETAIL,STG.TOTAL_COST,STG.TOTAL_RETAIL,STG.REF_NO1,STG.REF_NO2,STG.REF_NO3,STG.REF_NO4,STG.AREF,STG.CURRENCY,STG.CREATE_DATETIME,STG.CREATE_ID,STG.REV_NO,NULL AS ERR_MSG,NULL AS ERR_SEQ_NO,NULL AS HIER2,NULL AS HIER2_DESC,NULL AS HIER1,NULL AS HIER1_DESC,NULL AS HIER3,NULL AS HIER3_DESC,STG.REV_TRN_NO FROM STG_TRN_DATA STG, LOCATION LOC WHERE STG.LOCATION=LOC.LOCATION) UNION (SELECT ERR.TRAN_SEQ_NO,ERR.PROCESS_IND,ERR.ITEM,ID.ITEM_DESC,ERR.REF_ITEM,ERR.REF_ITEM_TYPE,ERR.LOCATION_TYPE,ERR.LOCATION,LOC.LOCATION_NAME,ERR.TRN_TYPE,ERR.QTY,ERR.PACK_QTY,ERR.PACK_COST,ERR.PACK_RETAIL,ERR.UNIT_COST,ERR.UNIT_RETAIL,ERR.TOTAL_COST,ERR.TOTAL_RETAIL,ERR.REF_NO1,ERR.REF_NO2,ERR.REF_NO3,ERR.REF_NO4,ERR.AREF,ERR.CURRENCY,ERR.CREATE_DATETIME,ERR.CREATE_ID,ERR.REV_NO,ERR.ERR_MSG,ERR.ERR_SEQ_NO,ERR.HIER2,CL.HIER2_DESC,ERR.HIER1,DT.HIER1_DESC,ERR.HIER3,SCL.HIER3_DESC,ERR.REV_TRN_NO FROM ERR_TRN_DATA ERR,ITEM_DTL ID,HIER1 DT,HIER2 CL,HIER3 SCL,LOCATION LOC WHERE ERR.HIER1=DT.HIER1 AND ERR.HIER2=CL.HIER2 AND ERR.HIER3=SCL.HIER3 AND ERR.LOCATION=LOC.LOCATION)) ESTG WHERE "
+            query="SELECT * FROM ((SELECT TRAN_SEQ_NO,STG.PROCESS_IND,STG.ITEM,NULL AS ITEM_DESC,STG.REF_ITEM,STG.REF_ITEM_TYPE,STG.LOCATION_TYPE,STG.LOCATION,LOC.LOCATION_NAME,STG.TRN_TYPE,TRN.TRN_NAME,STG.QTY,STG.PACK_QTY,STG.PACK_COST,STG.PACK_RETAIL,STG.UNIT_COST,STG.UNIT_RETAIL,STG.TOTAL_COST,STG.TOTAL_RETAIL,STG.REF_NO1,STG.REF_NO2,STG.REF_NO3,STG.REF_NO4,STG.AREF,STG.CURRENCY,STG.CREATE_DATETIME,STG.CREATE_ID,STG.REV_NO,NULL AS ERR_MSG,NULL AS ERR_SEQ_NO,NULL AS HIER2,NULL AS HIER2_DESC,NULL AS HIER1,NULL AS HIER1_DESC,NULL AS HIER3,NULL AS HIER3_DESC,STG.REV_TRN_NO FROM STG_TRN_DATA STG,TRN_TYPE_DTL TRN, LOCATION LOC WHERE STG.LOCATION=LOC.LOCATION AND STG.TRN_TYPE=TRN.TRN_TYPE) UNION (SELECT ERR.TRAN_SEQ_NO,ERR.PROCESS_IND,ERR.ITEM,ID.ITEM_DESC,ERR.REF_ITEM,ERR.REF_ITEM_TYPE,ERR.LOCATION_TYPE,ERR.LOCATION,LOC.LOCATION_NAME,ERR.TRN_TYPE,TRN.TRN_NAME,ERR.QTY,ERR.PACK_QTY,ERR.PACK_COST,ERR.PACK_RETAIL,ERR.UNIT_COST,ERR.UNIT_RETAIL,ERR.TOTAL_COST,ERR.TOTAL_RETAIL,ERR.REF_NO1,ERR.REF_NO2,ERR.REF_NO3,ERR.REF_NO4,ERR.AREF,ERR.CURRENCY,ERR.CREATE_DATETIME,ERR.CREATE_ID,ERR.REV_NO,ERR.ERR_MSG,ERR.ERR_SEQ_NO,ERR.HIER2,CL.HIER2_DESC,ERR.HIER1,DT.HIER1_DESC,ERR.HIER3,SCL.HIER3_DESC,ERR.REV_TRN_NO FROM ERR_TRN_DATA ERR,TRN_TYPE_DTL TRN,ITEM_DTL ID,HIER1 DT,HIER2 CL,HIER3 SCL,LOCATION LOC WHERE ERR.TRN_TYPE=TRN.TRN_TYPE AND ERR.HIER1=DT.HIER1 AND ERR.HIER2=CL.HIER2 AND ERR.HIER3=SCL.HIER3 AND ERR.LOCATION=LOC.LOCATION)) ESTG WHERE "
             #coverting the date format
             if  data["DATE"]=="NULL" or data["DATE"]=="":
                 data.pop("DATE")
             else:
-                start_date =datetime.strptime(data["DATE"],"%Y-%m-%d") 
+                start_date =datetime.strptime(data["DATE"],"%Y-%m-%d")
                 end_date=datetime.combine(start_date, datetime.max.time())
+                count=1
                 query=query+" CREATE_DATETIME BETWEEN '"+ str(start_date)+ "' AND '"+ str(end_date)+"' AND"
                 data.pop("DATE")
             for key in data:
@@ -205,8 +208,9 @@ def retrieve_err_stg(request):
                     else:
                         query=query+key+" in "+str(tuple(data[key]))+" AND "
                 else:
-                    query=query+key+"="+str(data[key])
-            data["DATE"]=''
+                    query=query+key+"='"+str(data[key])+"' AND "
+            if count==1:
+                data["DATE"]=''
             if len(data)==0:
                 query=query[:-6]+";"
             else:
