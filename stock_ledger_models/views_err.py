@@ -223,6 +223,7 @@ def err_trn_data_table(request):
                 results55=pd.read_sql(query,connection)
             else:
                 query=query[:-4]+';'
+                print(query)
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}

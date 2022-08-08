@@ -143,9 +143,9 @@ def GL_ACCOUNT_table(request):
                                 json_object[keys1]=str(tuple(json_object[keys1]))
                         else:
                             json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                    query="SELECT * FROM GL_ACCOUNT GL WHERE {}".format(' '.join('GL.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                    query="SELECT * FROM gl_account GL WHERE {}".format(' '.join('GL.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
                 else:
-                    query="SELECT * FROM GL_ACCOUNT GL WHERE {}".format(' '.join('GL.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                    query="SELECT * FROM gl_account GL WHERE {}".format(' '.join('GL.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
                 if len(json_object)==0:
                     query=query[:-6]+';'
                     results55=pd.read_sql(query,connection)
