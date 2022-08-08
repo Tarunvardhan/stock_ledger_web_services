@@ -82,10 +82,10 @@ WSGI_APPLICATION = 'stock.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'stock_ledger_1',
+        'NAME': 'stock_ledger',
         'USER':'root',
-        'PASSWORD':'Satya@6650',
-        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'PASSWORD':'Proxima360',
+        'HOST': '34.93.181.223',   # Or an IP Address that your DB is hosted on
         'PORT': '3306',
     }
 }

@@ -17,13 +17,13 @@ from stock_ledger_models.views_global import cancel_transaction
 #count of different indicators in TRN_DATA table:
 def count_trn_data(request):
     if request.method == 'GET':
-        count1 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM TRN_DATA WHERE PROCESS_IND='N';",connection)
-        count2 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM TRN_DATA WHERE PROCESS_IND='I';",connection)
-        count3 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM TRN_DATA WHERE PROCESS_IND='E';",connection)
-        count4 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM TRN_DATA WHERE PROCESS_IND='Y';",connection)
-        count5 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM TRN_DATA WHERE PROCESS_IND='W';",connection)
-        count6 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM TRN_DATA WHERE PROCESS_IND='C';",connection)
-        count7 = pd.read_sql("SELECT RECORDS_CLEANED FROM STG_TRN_DATA_DEL_RECORDS WHERE DATE=curdate() AND PROCESS='TRN_DATA'",connection)
+        count1 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM trn_data WHERE PROCESS_IND='N';",connection)
+        count2 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM trn_data WHERE PROCESS_IND='I';",connection)
+        count3 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM trn_data WHERE PROCESS_IND='E';",connection)
+        count4 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM trn_data WHERE PROCESS_IND='Y';",connection)
+        count5 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM trn_data WHERE PROCESS_IND='W';",connection)
+        count6 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM trn_data WHERE PROCESS_IND='C';",connection)
+        count7 = pd.read_sql("SELECT RECORDS_CLEANED FROM stg_trn_data_del_records WHERE DATE=curdate() AND PROCESS='TRN_DATA'",connection)
         count1=(count1.values)[0][0]
         count2=(count2.values)[0][0]
         count3=(count3.values)[0][0]
@@ -84,9 +84,9 @@ def trn_data_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.HIER1=DT.HIER1 AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data TD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.HIER1=DT.HIER1 AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.HIER1=DT.HIER1 AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data TD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.HIER1=DT.HIER1 AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -155,9 +155,9 @@ def trn_data_history_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA_HISTORY TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.HIER1=DT.HIER1 AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.HIER1=DT.HIER1 AND TD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM TRN_DATA_HISTORY TD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.HIER1=DT.HIER1 AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT TD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TD.ITEM=ITD.ITEM AND LOC.LOCATION=TD.LOCATION AND TD.TRN_TYPE=TTD.TRN_TYPE AND TD.HIER1=DT.HIER1 AND CL.HIER2=TD.HIER2 AND SCL.HIER3=TD.HIER3 AND IFNULL(TD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -218,7 +218,7 @@ def trn_data_rev_table(request):
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
                 if len(json_object)>0:
                     #Taking a record from TRN_DATA_HISTORY table based on TRAN_SEQ_NO.
-                    my_data = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                    my_data = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                     res_list=[]
                     #Converting the Queryset into the json format
                     for val in my_data.values:
@@ -229,7 +229,7 @@ def trn_data_rev_table(request):
                             count=count+1
                         res_list.append(l_dict)
                     rec1=res_list[0]
-                    mycursor.execute("desc TRN_DATA_HISTORY")
+                    mycursor.execute("desc trn_data_history")
                     d_type=mycursor.fetchall()
                     list_type=[]
                     list_type1=[]
@@ -294,14 +294,14 @@ def trn_data_rev_table(request):
                                 v_list.append(v)
                                 val=val+'%s,'
                         val=val[:-1]+')'
-                        query="insert into TRN_DATA_REV(" +cols + val
+                        query="insert into trn_data_rev(" +cols + val
                         mycursor.execute(query,v_list)
                     list3.append(json_object)
             for json_object in list3:
                 count1=count1+1
                 #Taking a record from STG_TRN_DATA of 1 record.
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
-                my_data = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                my_data = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                 res_list=[]
                 #Converting the Queryset into the json format
                 for val in my_data.values:
@@ -371,11 +371,11 @@ def trn_data_rev_table(request):
                                 v_list.append(v)
                                 val=val+'%s,'
                         val=val[:-1]+')'
-                        query1="insert into stg_trn_data(" +cols + val
+                        query1="insert into STG_TRN_DATA(" +cols + val
                         mycursor.execute(query1,v_list)
                     #Taking a record from TRN_DATA_HISTORY table based on TRAN_SEQ_NO.
                     if mycursor.rowcount>0 and connection:
-                        my_data1 = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                        my_data1 = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                         val_list=[]
                         #Converting the Queryset into the json format
                         for val in my_data1.values:
@@ -423,10 +423,10 @@ def trn_data_rev_table(request):
                                     v_list.append(v)
                                     val=val+'%s,'
                             val=val[:-1]+')'
-                            query3="insert into stg_trn_data(" +cols + val
+                            query3="insert into STG_TRN_DATA(" +cols + val
                             mycursor.execute(query3,v_list)
                             connection.commit()
-                            mycursor.execute("DELETE FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO='{}'".format(TRANS_NO))
+                            mycursor.execute("DELETE FROM trn_data_history WHERE TRAN_SEQ_NO='{}'".format(TRANS_NO))
                             connection.commit()
                     else:
                         connection.rollback()
@@ -474,7 +474,7 @@ def trn_data_rev_1_table(request):
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
                 if len(json_object)>0:
                     #Taking a record from TRN_DATA_HISTORY table based on TRAN_SEQ_NO.
-                    my_data = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                    my_data = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                     res_list=[]
                     #Converting the Queryset into the json format
                     for val in my_data.values:
@@ -485,7 +485,7 @@ def trn_data_rev_1_table(request):
                             count=count+1
                         res_list.append(l_dict)
                     rec1=res_list[0]
-                    mycursor.execute("desc TRN_DATA_HISTORY")
+                    mycursor.execute("desc trn_data_history")
                     d_type=mycursor.fetchall()
                     list_type=[]
                     list_type1=[]
@@ -548,14 +548,14 @@ def trn_data_rev_1_table(request):
                                 v_list.append(v)
                                 val=val+'%s,'
                         val=val[:-1]+')'
-                        query="insert into TRN_DATA_REV(" +cols + val
+                        query="insert into trn_data_rev(" +cols + val
                         mycursor.execute(query,v_list)
                     list3.append(json_object)
             for json_object in list3:
                 count1=count1+1
                 #Taking a record from STG_TRN_DATA of 1 record.
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
-                my_data = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                my_data = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                 res_list=[]
                 #Converting the Queryset into the json format
                 for val in my_data.values:
@@ -625,7 +625,7 @@ def trn_data_rev_1_table(request):
                                 v_list.append(v)
                                 val=val+'%s,'
                         val=val[:-1]+')'
-                        query1="insert into stg_trn_data(" +cols + val
+                        query1="insert into STG_TRN_DATA(" +cols + val
                         mycursor.execute(query1,v_list)
                         connection.commit()
                         return cancel_transaction(request)

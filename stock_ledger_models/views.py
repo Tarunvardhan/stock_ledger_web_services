@@ -50,7 +50,7 @@ def item_valid(request):
             for k in keys:
                 json_object.pop(k)
             #fetch DECIMAL type columns
-            mycursor.execute("desc ITEM_DTL")
+            mycursor.execute("desc item_dtl")
             d_type=mycursor.fetchall()
             list_type=[]
             for col2 in d_type:
@@ -70,9 +70,9 @@ def item_valid(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT ID.ITEM,ID.ITEM_DESC FROM ITEM_DTL ID WHERE {}".format(' '.join('ID.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT ID.ITEM,ID.ITEM_DESC FROM item_dtl ID WHERE {}".format(' '.join('ID.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT ID.ITEM,ID.ITEM_DESC FROM ITEM_DTL ID WHERE {}".format(' '.join('ID.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT ID.ITEM,ID.ITEM_DESC FROM item_dtl ID WHERE {}".format(' '.join('ID.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-6]+' order by ID.ITEM desc;'
                 results55=pd.read_sql(query,connection)
@@ -143,9 +143,9 @@ def GL_ACCOUNT_table(request):
                                 json_object[keys1]=str(tuple(json_object[keys1]))
                         else:
                             json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                    query="SELECT * FROM GL_ACCOUNT GL WHERE {}".format(' '.join('GL.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                    query="SELECT * FROM gl_account GL WHERE {}".format(' '.join('GL.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
                 else:
-                    query="SELECT * FROM GL_ACCOUNT GL WHERE {}".format(' '.join('GL.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                    query="SELECT * FROM gl_account GL WHERE {}".format(' '.join('GL.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
                 if len(json_object)==0:
                     query=query[:-6]+';'
                     results55=pd.read_sql(query,connection)
@@ -190,7 +190,7 @@ def GL_ACCOUNT_update(request):
                       key_list.append(key)
                 for key in key_list:
                    json_object.pop(key)
-                s_query="SELECT * FROM GL_ACCOUNT WHERE PRIMARY_ACCOUNT= "+str(json_object["PRIMARY_ACCOUNT"])+";"
+                s_query="SELECT * FROM gl_account WHERE PRIMARY_ACCOUNT= "+str(json_object["PRIMARY_ACCOUNT"])+";"
                 result=pd.read_sql(s_query,connection)
                 for val in result.values:
                     count=0
@@ -207,7 +207,7 @@ def GL_ACCOUNT_update(request):
                                  u_dict[col]=json_object[col]
                         if json_object[col]!=l_dict[col]:
                             u_dict[col]=json_object[col]
-                    u_query="UPDATE GL_ACCOUNT SET "
+                    u_query="UPDATE gl_account SET "
                     for col in u_dict:
                         if col=="PRIMARY_ACCOUNT" or col=="SET_OF_BOOKS_ID":
                             u_query=u_query+str(col)+"="+str(u_dict[col])+","

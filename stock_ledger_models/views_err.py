@@ -3,7 +3,7 @@ import csv
 from multiprocessing.connection import Connection
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,err_trn_data,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,item_dtl,HIER1,HIER2,HIER3
 from django.http import JsonResponse,HttpResponse,StreamingHttpResponse
 from django.core import serializers
 from datetime import datetime,date
@@ -25,7 +25,7 @@ class MySerialiser(Serializer):
         self.objects.append( self._current )
 
 
-#Fetching all the column values from ERR_TRN_DATA table:
+#Fetching all the column values from err_trn_data table:
 def err_trn(request):
     if request.method == 'GET':
         try:
@@ -39,7 +39,7 @@ def err_trn(request):
                     if "LOCATION" in col[0] or "REV_NO" in col[0] or "ERR_SEQ_NO" in col[0]:
                         list_type.append(col[0])
             
-            query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION "
+            query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME FROM err_trn_data ETD,item_dtl ITD,location LOC WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION "
             results=pd.read_sql(query,connection)
             res_list=[]
             for val1 in results.values:
@@ -66,7 +66,7 @@ def err_trn(request):
 
 
 
-#Deleting the records from ERR_TRN_DATA table and updating in STG_TRN_DATA table:  
+#Deleting the records from err_trn_data table and updating in STG_TRN_DATA table:  
 @csrf_exempt    
 def del_err_trn_data(request):
     if request.method == 'POST':
@@ -93,9 +93,9 @@ def del_err_trn_data(request):
                         list_type.append(col[0])
                 if len(data)>0:
                     D_keys=[]
-                    mycursor.execute("select TRAN_SEQ_NO from ERR_TRN_DATA WHERE TRAN_SEQ_NO={}".format(TRAN_SEQ_NO))
+                    mycursor.execute("select TRAN_SEQ_NO from err_trn_data WHERE TRAN_SEQ_NO={}".format(TRAN_SEQ_NO))
                     if mycursor.rowcount>0:
-                        my_data = pd.read_sql("SELECT * FROM ERR_TRN_DATA WHERE TRAN_SEQ_NO={};".format(TRAN_SEQ_NO),connection)
+                        my_data = pd.read_sql("SELECT * FROM err_trn_data WHERE TRAN_SEQ_NO={};".format(TRAN_SEQ_NO),connection)
                         for val in my_data.values:
                             count=0
                             rec={}
@@ -160,7 +160,7 @@ def del_err_trn_data(request):
                             i_query="INSERT INTO STG_TRN_DATA ("+cols+val
                             mycursor.execute(i_query,v_list)                            
                             #Delete the Record                 
-                            mycursor.execute("DELETE FROM ERR_TRN_DATA WHERE TRAN_SEQ_NO='{}'".format(TRAN_SEQ_NO))
+                            mycursor.execute("DELETE FROM err_trn_data WHERE TRAN_SEQ_NO='{}'".format(TRAN_SEQ_NO))
                             connection.commit()
                     else:
                         return JsonResponse({"status": 500,"message" :f"{TRAN_SEQ_NO} does not exist"})
@@ -174,12 +174,13 @@ def del_err_trn_data(request):
             connection.close()
 
 
-#Fetching the data from ERR_TRN_DATA table based on the input parameters:
+#Fetching the data from err_trn_data table based on the input parameters:
 @csrf_exempt   
 def err_trn_data_table(request):
     if request.method == 'POST':
         try:
             json_object = json.loads(request.body)
+            print(json_object)
             json_object=json_object[0]
             keys=[]
             mycursor=connection.cursor()
@@ -213,12 +214,13 @@ def err_trn_data_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.HIER1=DT.HIER1 AND ETD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=ETD.HIER2 AND SCL.HIER3=ETD.HIER3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM err_trn_data ETD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.HIER1=DT.HIER1 AND ETD.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=ETD.HIER2 AND SCL.HIER3=ETD.HIER3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM ERR_TRN_DATA ETD,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.TRN_TYPE=TTD.TRN_TYPE AND ETD.HIER1=DT.HIER1 AND CL.HIER2=ETD.HIER2 AND SCL.HIER3=ETD.HIER3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM err_trn_data ETD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.TRN_TYPE=TTD.TRN_TYPE AND ETD.HIER1=DT.HIER1 AND CL.HIER2=ETD.HIER2 AND SCL.HIER3=ETD.HIER3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
                 
             if len(json_object)==0:
                 query=query[:-4]+';'
+                print(1,query)
                 results55=pd.read_sql(query,connection)
             else:
                 query=query[:-4]+';'

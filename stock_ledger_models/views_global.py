@@ -2,7 +2,7 @@ import json
 import csv
 import pandas as pd
 from django.db import IntegrityError
-#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,TRN_DATA_HISTORY,TRN_DATA_REV,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
+#from .models import LOCATION, STG_TRN_DATA,TRN_DATA,PNDG_DLY_ROLLUP,STG_TRN_DATA_DEL_RECORDS,SYSTEM_CONFIG,ERR_TRN_DATA,DAILY_SKU,DAILY_ROLLUP,trn_data_history,trn_data_rev,CURRENCY,ITEM_LOCATION,ITEM_DTL,HIER1,HIER2,HIER3
 from django.http import JsonResponse,HttpResponse,StreamingHttpResponse
 from django.core import serializers
 from datetime import datetime,date
@@ -25,7 +25,7 @@ class MySerialiser(Serializer):
         self.objects.append( self._current )
 
 
-#Transaction reversal(Fetch the record from TRN_DATA_HISTORY table, insert the QTY*(-1) into record in STG_TRN_DATA table with new TRAN_SEQ_NO)      
+#Transaction reversal(Fetch the record from trn_data_history table, insert the QTY*(-1) into record in STG_TRN_DATA table with new TRAN_SEQ_NO)      
 @csrf_exempt             
 def cancel_transaction(request):
     if request.method == 'POST':
@@ -47,8 +47,8 @@ def cancel_transaction(request):
                 if "TRAN_SEQ_NO" in json_object:
                     #Storing the value of TRAN_SEQ_NO column
                     TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
-                    #Taking a record from TRN_DATA_HISTORY table based on TRAN_SEQ_NO.
-                    my_data = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                    #Taking a record from trn_data_history table based on TRAN_SEQ_NO.
+                    my_data = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                     res_list=[]
                     #Converting the Queryset into the json format
                     for val in my_data.values:
@@ -80,14 +80,14 @@ def cancel_transaction(request):
                                 v_list.append(v)
                                 val=val+'%s,'
                         val=val[:-1]+')'
-                        query="insert into TRN_DATA_REV(" +cols + val
+                        query="insert into trn_data_rev(" +cols + val
                         mycursor.execute(query,v_list)
                     list3.append(json_object)
             print(54321)
             for json_object in list3:
                 #Taking a record from STG_TRN_DATA of 1 record.
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
-                my_data = pd.read_sql("SELECT * FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
+                my_data = pd.read_sql("SELECT * FROM trn_data_history WHERE TRAN_SEQ_NO={};".format(TRANS_NO),connection)
                 res_list=[]
                 #Converting the Queryset into the json format
                 for val in my_data.values:
@@ -113,7 +113,7 @@ def cancel_transaction(request):
                     D_keys1=[]
                     f_keys1=[]
                     R_keys1=[]
-                    #Removing extra columns from STG_TRN_DATA table when compared with TRN_DATA_HISTORY table
+                    #Removing extra columns from STG_TRN_DATA table when compared with trn_data_history table
                     for f1 in rec2:
                         if f1 not in rec3:
                             f_keys1.append(f1)
@@ -121,7 +121,7 @@ def cancel_transaction(request):
                         rec2.pop(f2)
                     l_counter=0 
                     for item1 in res_list:
-                        #Removing extra columns from TRN_DATA_HISTORY table when compared with STG_TRN_DATA table
+                        #Removing extra columns from trn_data_history table when compared with STG_TRN_DATA table
                         for f6 in item1:
                             if f6 not in rec2:
                                 R_keys1.append(f6)       
@@ -155,10 +155,10 @@ def cancel_transaction(request):
                                 v_list.append(v)
                                 val=val+'%s,'
                         val=val[:-1]+')'
-                        query3="insert into stg_trn_data(" +cols + val
+                        query3="insert into STG_TRN_DATA(" +cols + val
                         mycursor.execute(query3,v_list)
                         if mycursor.rowcount>0 and connection:               
-                            mycursor.execute("DELETE FROM TRN_DATA_HISTORY WHERE TRAN_SEQ_NO='{}'".format(TRANS_NO))
+                            mycursor.execute("DELETE FROM trn_data_history WHERE TRAN_SEQ_NO='{}'".format(TRANS_NO))
                             connection.commit()
                         else:
                             connection.rollback()
@@ -197,7 +197,7 @@ def system_conf(request):
             for json_object in list2:
                 AREF_1=json_object.get("AREF", None)
                 TRNTYPE=json_object.get("TRN_TYPE", None)
-                record = pd.read_sql("SELECT * FROM SYSTEM_CONFIG WHERE TRN_TYPE='{}' AND AREF='{}'".format(TRNTYPE,AREF_1),connection)
+                record = pd.read_sql("SELECT * FROM system_config WHERE TRN_TYPE='{}' AND AREF='{}'".format(TRNTYPE,AREF_1),connection)
                 res_list=[]
                 #Converting the Queryset into the json format
                 for val in record.values:
@@ -227,7 +227,7 @@ def system_conf(request):
                 json_object1.pop("TRN_TYPE")
                 json_object1.pop("AREF")
                 if len(json_object1)>0:
-                    results = "update SYSTEM_CONFIG set {} where TRN_TYPE='{}' AND AREF='{}'".format(', '.join('{}="{}"'.format(k,json_object1[k]) for k in json_object1),TRNTYPE,AREF_1)
+                    results = "update system_config set {} where TRN_TYPE='{}' AND AREF='{}'".format(', '.join('{}="{}"'.format(k,json_object1[k]) for k in json_object1),TRNTYPE,AREF_1)
                     mycursor.execute(results)
                     count=count+mycursor.rowcount
                     connection.commit()
@@ -258,7 +258,7 @@ def get_cost_item_location(request):
                data.pop(key)
             if "ITEM" in data and "LOCATION" in data:
                 for key in data:
-                    query="SELECT ITEM,LOCATION ,UNIT_COST FROM ITEM_LOCATION WHERE "
+                    query="SELECT ITEM,LOCATION ,UNIT_COST FROM item_location WHERE "
                     if len(data[key])==1:
                         data[key]=(data[key])[0]
                         query=query+key+" in ("+str(data[key])+") AND "
@@ -313,9 +313,9 @@ def cost_update_stg(request):
                 data.pop("QTY")
                 data['UNIT_COST'] =int(data['UNIT_COST'] )
                 if data['UNIT_COST'] >0:
-                    mycursor.execute('SELECT * FROM ITEM_LOCATION WHERE ITEM={} AND LOCATION={};'.format(data['ITEM'],data['LOCATION']))
+                    mycursor.execute('SELECT * FROM item_location WHERE ITEM={} AND LOCATION={};'.format(data['ITEM'],data['LOCATION']))
                     if mycursor.rowcount>0:
-                        cost_rec = pd.read_sql('SELECT UNIT_COST,ITEM_SOH FROM ITEM_LOCATION WHERE ITEM={} AND LOCATION={};'.format(data['ITEM'],data['LOCATION']),connection)    
+                        cost_rec = pd.read_sql('SELECT UNIT_COST,ITEM_SOH FROM item_location WHERE ITEM={} AND LOCATION={};'.format(data['ITEM'],data['LOCATION']),connection)    
                         cost_rec=(cost_rec.values)
                         l_counter=0
                         if len(cost_rec)>0:
@@ -352,7 +352,7 @@ def cost_update_stg(request):
                                     val=val+'%s,'
                             val=val[:-1]+')'
                             #UPDATING NEW COST  IN ITEM_LOCATION
-                            mycursor.execute("update ITEM_LOCATION set UNIT_COST={} where ITEM={} AND LOCATION={}".format(data['UNIT_COST'],data['ITEM'],data['LOCATION']))
+                            mycursor.execute("update item_location set UNIT_COST={} where ITEM={} AND LOCATION={}".format(data['UNIT_COST'],data['ITEM'],data['LOCATION']))
                             #INSERTING INTO VARIANCE IN STG_TRN_DATA
                             if mycursor.rowcount>0:
                                 if qty!=0:
@@ -394,7 +394,7 @@ def location_valid(request):
                     key_list.append(key)
             if  len(data[key])==0:
                 #Display all if no input
-                result = pd.read_sql("SELECT LOCATION,LOCATION_NAME FROM LOCATION",connection)
+                result = pd.read_sql("SELECT LOCATION,LOCATION_NAME FROM location",connection)
                 res_list=[]
                 for val1 in result.values:
                     count=0
@@ -410,7 +410,7 @@ def location_valid(request):
             else:
                 if len(data.values())>0:
                     #Display if valid or invalid with input
-                    query= "SELECT * FROM LOCATION WHERE "
+                    query= "SELECT * FROM location WHERE "
                     
                     if len(data[key])==1:
                         data[key]=(data[key])[0]
@@ -456,7 +456,7 @@ def currency_valid(request):
             for key_l in key_list:
                data.pop(key_l)
             if  len(data)==0:             
-                result = pd.read_sql("SELECT CURRENCY,CURRENCY_DESC FROM CURRENCY",connection)
+                result = pd.read_sql("SELECT CURRENCY,CURRENCY_DESC FROM currency",connection)
                 res_list=[]
                 for val1 in result.values:
                     count=0
@@ -472,7 +472,7 @@ def currency_valid(request):
             else:
                  if len(data.values())>0:
                     #Display if valid or invalid with input
-                    query= "SELECT * FROM CURRENCY WHERE "
+                    query= "SELECT * FROM currency WHERE "
                     
                     if len(data[key])==1:
                         data[key]=(data[key])[0]
@@ -519,7 +519,7 @@ def item_location_valid(request):
             for key in key_list:
                data.pop(key)
             if len(data)==0:                
-                my_data = pd.read_sql("SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME FROM ITEM_DTL IT,LOCATION L ,ITEM_LOCATION IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION;",connection)
+                my_data = pd.read_sql("SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME FROM item_dtl IT,location L ,item_location IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION;",connection)
                 res_list=[]                
                 for val in my_data.values:
                     count=0
@@ -530,7 +530,7 @@ def item_location_valid(request):
                     res_list.append(l_dict)
                 return JsonResponse(res_list, content_type="application/json",safe=False)
             else:
-                query="SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME FROM ITEM_DTL IT,LOCATION L ,ITEM_LOCATION IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION AND "
+                query="SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME FROM item_dtl IT,location L ,item_location IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION AND "
                 for key in data:
                     if len(data[key])==1:
                            data[key]=(data[key])[0]                           
@@ -577,7 +577,7 @@ def lov_item_dtl(request):
            for key in key_list:
                 data.pop(key)
            if  len(data)==0:
-               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.HIER1, DP.HIER1_DESC, ID.HIER2, C.HIER2_DESC, ID.HIER3, SC.HIER3_DESC FROM ITEM_DTL ID, HIER1 DP, HIER2 C, HIER3 SC WHERE DP.HIER1=ID.HIER1 AND C.HIER2=ID.HIER2 AND SC.HIER3=ID.HIER3 ORDER BY ID.HIER1 ",connection)#
+               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.HIER1, DP.HIER1_DESC, ID.HIER2, C.HIER2_DESC, ID.HIER3, SC.HIER3_DESC FROM item_dtl ID, hier1 DP, hier2 C, hier3 SC WHERE DP.HIER1=ID.HIER1 AND C.HIER2=ID.HIER2 AND SC.HIER3=ID.HIER3 ORDER BY ID.HIER1 ",connection)#
                res_list=[]                
                for val in result.values:
                    count=0
@@ -590,7 +590,7 @@ def lov_item_dtl(request):
                    return JsonResponse({"Error ":"No Data Found"})
                return JsonResponse(res_list, content_type="application/json",safe=False)
            else:
-               query="SELECT ITEM,ITEM_DESC,HIER1,HIER2,HIER3 FROM ITEM_DTL WHERE " 
+               query="SELECT ITEM,ITEM_DESC,HIER1,HIER2,HIER3 FROM item_dtl WHERE " 
                for key in data:
                    if len(data[key])==1:
                        data[key]=(data[key])[0]
@@ -649,9 +649,9 @@ def system_config_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT SC.*,TTD.TRN_NAME FROM SYSTEM_CONFIG SC,TRN_TYPE_DTL TTD WHERE SC.TRN_TYPE=TTD.TRN_TYPE AND SC.AREF=TTD.AREF AND {}".format(' '.join('SC.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT SC.*,TTD.TRN_NAME FROM system_config SC,trn_type_dtl TTD WHERE SC.TRN_TYPE=TTD.TRN_TYPE AND SC.AREF=TTD.AREF AND {}".format(' '.join('SC.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT SC.*,TTD.TRN_NAME FROM SYSTEM_CONFIG SC,TRN_TYPE_DTL TTD WHERE SC.TRN_TYPE=TTD.TRN_TYPE AND SC.AREF=TTD.AREF AND {}".format(' '.join('SC.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT SC.*,TTD.TRN_NAME FROM system_config SC,trn_type_dtl TTD WHERE SC.TRN_TYPE=TTD.TRN_TYPE AND SC.AREF=TTD.AREF AND {}".format(' '.join('SC.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 print("1: ",query)
@@ -684,7 +684,7 @@ def system_config_table(request):
 def fetch_item_location(request):
     if request.method == 'GET':
         try:                         
-            my_data = pd.read_sql("SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME,IL.UNIT_COST, IL.ITEM_SOH FROM ITEM_DTL IT,LOCATION L ,ITEM_LOCATION IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION;",connection)
+            my_data = pd.read_sql("SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME,IL.UNIT_COST, IL.ITEM_SOH FROM item_dtl IT,location L ,item_location IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION;",connection)
             res_list=[]                
             for val in my_data.values:
                 count=0

@@ -27,13 +27,13 @@ class MySerialiser(Serializer):
 #count of different indicators in PNDG_DLY_ROLLUP table:        
 def count_pndg_dly_rollup(request):
     if request.method == 'GET':
-        count1 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM PNDG_DLY_ROLLUP WHERE PROCESS_IND='N';",connection)
-        count2 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM PNDG_DLY_ROLLUP WHERE PROCESS_IND='I';",connection)
-        count3 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM PNDG_DLY_ROLLUP WHERE PROCESS_IND='E';",connection)
-        count4 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM PNDG_DLY_ROLLUP WHERE PROCESS_IND='Y';",connection)
-        count5 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM PNDG_DLY_ROLLUP WHERE PROCESS_IND='W';",connection)
-        count6 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM PNDG_DLY_ROLLUP WHERE PROCESS_IND='C';",connection)
-        count7 = pd.read_sql("SELECT RECORDS_CLEANED FROM STG_TRN_DATA_DEL_RECORDS WHERE DATE=curdate() AND PROCESS='PNDG_DLY_ROLLUP'",connection)
+        count1 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='N';",connection)
+        count2 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='I';",connection)
+        count3 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='E';",connection)
+        count4 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='Y';",connection)
+        count5 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='W';",connection)
+        count6 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='C';",connection)
+        count7 = pd.read_sql("SELECT RECORDS_CLEANED FROM stg_trn_data_del_records WHERE DATE=curdate() AND PROCESS='PNDG_DLY_ROLLUP'",connection)
         count1=(count1.values)[0][0]
         count2=(count2.values)[0][0]
         count3=(count3.values)[0][0]
@@ -93,9 +93,9 @@ def daily_rollup_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_ROLLUP DR,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.HIER1=DT.HIER1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=DR.HIER2 AND SCL.HIER3=DR.HIER3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_rollup DR,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.HIER1=DT.HIER1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=DR.HIER2 AND SCL.HIER3=DR.HIER3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_ROLLUP DR,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND DR.HIER1=DT.HIER1 AND CL.HIER2=DR.HIER2 AND SCL.HIER3=DR.HIER3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT DR.*,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_rollup DR,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE LOC.LOCATION=DR.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND DR.HIER1=DT.HIER1 AND CL.HIER2=DR.HIER2 AND SCL.HIER3=DR.HIER3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -166,9 +166,9 @@ def daily_sku_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_SKU DS,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.HIER1=DT.HIER1 AND DS.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=DS.HIER2 AND SCL.HIER3=DS.HIER3 AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DS,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.HIER1=DT.HIER1 AND DS.TRN_TYPE=TTD.TRN_TYPE AND CL.HIER2=DS.HIER2 AND SCL.HIER3=DS.HIER3 AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM DAILY_SKU DS,ITEM_DTL ITD,LOCATION LOC,TRN_TYPE_DTL TTD,HIER1 DT,HIER2 CL,HIER3 SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.TRN_TYPE=TTD.TRN_TYPE AND DS.HIER1=DT.HIER1 AND CL.HIER2=DS.HIER2 AND SCL.HIER3=DS.HIER3 AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DS,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE ITD.ITEM=DS.ITEM AND LOC.LOCATION=DS.LOCATION AND DS.TRN_TYPE=TTD.TRN_TYPE AND DS.HIER1=DT.HIER1 AND CL.HIER2=DS.HIER2 AND SCL.HIER3=DS.HIER3 AND IFNULL(DS.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DS.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -239,9 +239,9 @@ def daily_rec_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DR.*,D.HIER1_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM DAILY_REC DR,HIER1 D,LOCATION LOC,TRN_TYPE_DTL TTD WHERE DR.HIER1=D.HIER1 AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT DR.*,D.HIER1_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM daily_rec DR,hier1 D,location LOC,trn_type_dtl TTD WHERE DR.HIER1=D.HIER1 AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT DR.*,D.HIER1_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM DAILY_REC DR,HIER1 D,LOCATION LOC,TRN_TYPE_DTL TTD WHERE DR.HIER1=D.HIER1 AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT DR.*,D.HIER1_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME FROM daily_rec DR,hier1 D,location LOC,trn_type_dtl TTD WHERE DR.HIER1=D.HIER1 AND DR.LOCATION=LOC.LOCATION AND DR.TRN_TYPE=TTD.TRN_TYPE AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
