@@ -95,6 +95,7 @@ def trn_data_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
+            
             results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
