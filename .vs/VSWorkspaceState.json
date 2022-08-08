@@ -5,6 +5,6 @@
     "\\stock_ledger_models",
     "\\stock_ledger_models\\migrations"
   ],
-  "SelectedNode": "\\stock_ledger_models\\views_stage.py",
+  "SelectedNode": "\\stock_ledger_models\\views.py",
   "PreviewInSolutionExplorer": false
 }
