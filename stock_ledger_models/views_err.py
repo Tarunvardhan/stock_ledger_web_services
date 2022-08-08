@@ -220,14 +220,12 @@ def err_trn_data_table(request):
                 
             if len(json_object)==0:
                 query=query[:-4]+';'
-                print(1,query)
                 results55=pd.read_sql(query,connection)
             else:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            
             results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0

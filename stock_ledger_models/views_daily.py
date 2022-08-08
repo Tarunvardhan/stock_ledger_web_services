@@ -104,8 +104,7 @@ def daily_rollup_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            
-            results55 =  results55.replace(np.NaN, "NULL", regex=True)
+            print(query)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -178,8 +177,7 @@ def daily_sku_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            
-            results55 =  results55.replace(np.NaN, "NULL", regex=True)
+            print(query)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -252,7 +250,6 @@ def daily_rec_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:

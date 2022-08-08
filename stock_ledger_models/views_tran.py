@@ -95,8 +95,6 @@ def trn_data_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            
-            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -157,9 +155,9 @@ def trn_data_history_table(request):
                             json_object[keys1]=str(tuple(json_object[keys1]))
                     else:
                         json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3  SCL on TDH.HIER3=SCL.HIER3 AND {}".format(' '.join('TD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3 SCL on TDH.HIER3=SCL.HIER3 AND {}".format(' '.join('TDH.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
-                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3  SCL on TDH.HIER3=SCL.HIER3 AND {}".format(' '.join('TD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3 SCL on TDH.HIER3=SCL.HIER3 AND {}".format(' '.join('TDH.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -168,7 +166,7 @@ def trn_data_history_table(request):
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, "NULL", regex=True)
+            results55 =  results55.replace(np.NaN, None, regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:

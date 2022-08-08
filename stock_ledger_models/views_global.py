@@ -681,10 +681,42 @@ def system_config_table(request):
 
 
 #fetch data from ITEM_LOCATION table.
+@csrf_exempt
 def fetch_item_location(request):
-    if request.method == 'GET':
-        try:                         
-            my_data = pd.read_sql("SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME,IL.UNIT_COST, IL.ITEM_SOH FROM item_dtl IT,location L ,item_location IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION;",connection)
+    if request.method == 'POST':
+        try:    
+            data=json.loads(request.body)
+            data=data[0]
+            r_list=[]
+            query="SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME,IL.UNIT_COST,IL.ITEM_SOH FROM item_dtl IT,location L ,item_location IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION "
+            for key in data:
+               if isinstance(data[key], list):
+                   if len(data[key])==0:
+                       r_list.append(key)
+               if data[key]=="" or data[key]=="NULL":
+                   r_list.append(key)
+            for key in r_list:
+                data.pop(key)
+            if len(data)>0:
+                for key in data:
+                    if key=="LOCATION" or key=="ITEM":
+                        if len(data[key])==1:
+                            data[key]=(data[key])[0]
+                            query=query+" AND IL."+key+" in ('"+str(data[key])+"')"
+                        else:
+                            query=query+" AND IL."+key+" in "+str(tuple(data[key]))
+                            #query=query+"AND IL."+str(key)+"="+str(data[key][0])
+                    else:
+                        if len(data[key])==1:
+                            data[key]=(data[key])[0]
+                            query=query+" AND IT."+key+" in ('"+str(data[key])+"') "
+                        else:
+                            query=query+" AND IT."+key+" in "+str(tuple(data[key]))
+                        #query=query+"AND IT."+str(key)+"="+str(data[key][0])
+                query=query+";"
+            else:
+                query=query+";"
+            my_data = pd.read_sql(query,connection)
             res_list=[]                
             for val in my_data.values:
                 count=0
@@ -696,7 +728,7 @@ def fetch_item_location(request):
             if len(res_list)>0:
                 return JsonResponse(res_list, content_type="application/json",safe=False)
             else:
-                return JsonResponse({"status": 500, "message": "No Data Found"})   
+                return JsonResponse({"status": 500, "message": "No Data Found"})
         except Exception as error:
             return JsonResponse({"status": 500, "message":str(error)})
         finally:

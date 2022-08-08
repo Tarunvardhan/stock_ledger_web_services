@@ -104,19 +104,19 @@ def item_valid(request):
 
 
 #Fetching the data from GL_ACCOUNT based on the input parameters:
-@csrf_exempt 
+@csrf_exempt
 def GL_ACCOUNT_table(request):
     if request.method == 'POST':
         try:
             json_object_list = json.loads(request.body)
-            #json_object=json_object[0]
             keys=[]
             res_list=[]
             mycursor=connection.cursor()
             for json_object in json_object_list:
                 for key1 in json_object:
-                    if (len(str(json_object[key1])))==0:
-                        json_object[key1]="NULL"
+                    if isinstance(json_object[key1], list):
+                        if (len(json_object[key1]))==0:
+                            json_object[key1]="NULL"
                 for key in json_object:
                     if json_object[key]=="NULL" or json_object[key]=="":
                         json_object[key]=None
@@ -143,15 +143,17 @@ def GL_ACCOUNT_table(request):
                                 json_object[keys1]=str(tuple(json_object[keys1]))
                         else:
                             json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                    query="SELECT * FROM gl_account GL WHERE {}".format(' '.join('GL.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                    query="SELECT * FROM GL_ACCOUNT GL WHERE {}".format(' '.join('GL.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
                 else:
-                    query="SELECT * FROM gl_account GL WHERE {}".format(' '.join('GL.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                    query="SELECT * FROM GL_ACCOUNT GL WHERE {}".format(' '.join('GL.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
                 if len(json_object)==0:
                     query=query[:-6]+';'
                     results55=pd.read_sql(query,connection)
                 else:
                     query=query[:-4]+';'
                     results55=pd.read_sql(query,connection)
+                results55 = results55.replace(np.NaN,None, regex=True)
+
                 res_list=[]
                 rec={}
                 for val2 in results55.values:
@@ -161,7 +163,8 @@ def GL_ACCOUNT_table(request):
                         count=count+1
                     for col5 in list_type:
                         if col5 in rec:
-                            rec[col5]=int(rec[col5])
+                            if rec[col5]!=None:
+                                rec[col5]=int(rec[col5])
                     res_list.append(rec.copy())
             if len(res_list)==0:
                 return JsonResponse({"status": 500, "message": "NO DATA FOUND"})
@@ -175,7 +178,11 @@ def GL_ACCOUNT_table(request):
              connection.close()
 
 
-#UPDATING - GL_ACCOUNT based on the input 
+
+
+
+
+#UPDATING - GL_ACCOUNT based on the input
 @csrf_exempt
 def GL_ACCOUNT_update(request):
     if request.method == 'POST':
@@ -185,13 +192,16 @@ def GL_ACCOUNT_update(request):
             u_count=0
             for json_object in json_object_list:
                 key_list=[]
+               
                 for key in json_object:
                   if json_object[key]=="" or json_object[key]=="NULL":
                       key_list.append(key)
                 for key in key_list:
                    json_object.pop(key)
+               
                 s_query="SELECT * FROM gl_account WHERE PRIMARY_ACCOUNT= "+str(json_object["PRIMARY_ACCOUNT"])+";"
                 result=pd.read_sql(s_query,connection)
+
                 for val in result.values:
                     count=0
                     l_dict={}
@@ -213,18 +223,42 @@ def GL_ACCOUNT_update(request):
                             u_query=u_query+str(col)+"="+str(u_dict[col])+","
                         else:
                             u_query=u_query+str(col)+"="+"'"+str(u_dict[col])+"'"+","
-                    print(u_query)
                     u_query=u_query[:-1]+" WHERE PRIMARY_ACCOUNT="+str(json_object["PRIMARY_ACCOUNT"])+";"
-                    print(u_query)
                     mycursor.execute(u_query)
                     if mycursor.rowcount >0:
                         u_count=u_count+1
-                return JsonResponse({"status": 200,"message": f"Records updated: {u_count} "})
+            return JsonResponse({"status": 200,"message": f"Records updated: {u_count} "})
         except Exception as error:
             return JsonResponse({"status": 500, "message": str(error)})
         finally:
             mycursor.close()
             connection.close()
+
+#FETCH currency from CURRENCY table.
+@csrf_exempt
+def currency_gl(request):
+    if request.method == 'POST':
+        try:                  
+            result = pd.read_sql("SELECT CURRENCY FROM currency",connection)
+            res_list=[]
+            for val1 in result.values:
+                count=0
+                rec={}
+                for col in result.columns:
+                    rec[col]=val1[count]
+                    count=count+1
+                res_list.append(rec)
+            if len(res_list)==0:
+                return JsonResponse({"Error ":"No Data Found"})
+            else:
+                return JsonResponse(res_list, content_type="application/json",safe=False)
+           
+        except Exception as error:
+            return JsonResponse({"status": 500, "message":str(error)})
+        finally:            
+            connection.close()
+
+
 
 
 #Insert the input data to GL account:
@@ -238,9 +272,11 @@ def GL_ACCOUNT_INSERT(request):
             #res_list=[]
             mycursor=connection.cursor()
             for json_object in json_object_list:
-                for keys_2 in json_object:
-                    if isinstance(json_object[keys_2], list):
-                        json_object[keys_2][0]
+                create_id=json_object["CREATE_ID"]
+                json_object.pop("CREATE_ID")
+                for key1 in json_object:
+                    if isinstance(json_object[key1], list):
+                        json_object[key1][0]
                 for key1 in json_object:
                     if (len(str(json_object[key1])))==0:
                         json_object[key1]="NULL"
@@ -251,7 +287,7 @@ def GL_ACCOUNT_INSERT(request):
                 for k in keys:
                     json_object.pop(k)
                 json_object["CREATE_DATETIME"]=str(datetime.now())
-                json_object["CREATE_ID"]=str(current_user)
+                json_object["CREATE_ID"]=create_id
                 cols=",".join(map(str, json_object.keys()))
                 v_list=[]
                 val=') VALUES('
@@ -268,4 +304,7 @@ def GL_ACCOUNT_INSERT(request):
             return JsonResponse({"status": 201, "message": "Data Inserted"})
         except Exception as error:
             return JsonResponse({"status": 500, "message": str(error)})
+        finally:
+            mycursor.close()
+            connection.close()
 
