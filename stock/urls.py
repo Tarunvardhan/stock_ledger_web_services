@@ -55,6 +55,6 @@ urlpatterns = [
     path('GL_ACCOUNT_update/',GL_ACCOUNT_update),                   #UPDATING - GL_ACCOUNT based on the input 
     path('GL_ACCOUNT_create/',GL_ACCOUNT_INSERT),                   #Insert the input data to GL account.
     path('item_validation/',item_valid),
-    path('currency/',currency_gl),
+    path('currency_gl/',currency_gl),
     path('test/',sample)
 ]
