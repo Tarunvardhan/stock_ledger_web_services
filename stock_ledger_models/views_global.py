@@ -58,17 +58,39 @@ def cancel_transaction(request):
                             l_dict[col]=val[count]
                             count=count+1
                         res_list.append(l_dict)
+                    rec1=res_list[0]
                     D_keys=[]
+                    R_keys1=[]
+                    ARCHIEVE_DATETIME=l_dict["ARCHIEVE_DATETIME"]
+                    #fetching columns names
+                    mycursor.execute("desc trn_data_rev")
+                    d_type=mycursor.fetchall()
+                    list_type=[]
+                    list_val1=[]
+                    for col2 in d_type:
+                        list_val1.append(col2[0])
+                        if col2[0] not in rec1:
+                            list_type.append(col2[0])
+                    for h1 in list_type:
+                        list_val1.remove(h1)
                     for row in res_list:
+                        #Removing extra columns from trn_data_history table when compared with trn_data_rev table
+                        for f11 in row:
+                            if f11 not in list_val1:
+                                R_keys1.append(f11)       
+                        for f21 in R_keys1:
+                            row.pop(f21)
+                        R_keys1.clear()
                         #Removing NULL and Empty columns.
                         for k1 in row:
-                            if row[k1]=="" or (row[k1])=="NULL":
+                            if row[k1]=="" or (row[k1])=="NULL"  or row[k1]==None:
                                 D_keys.append(k1) 
                         for k1 in D_keys:
                             row.pop(k1)
                         D_keys.clear()
                         #inserting the data.
                         row["CREATE_ID"]=str(current_user)
+                        row["UPDATE_DATETIME"]=ARCHIEVE_DATETIME
                         row["TRAN_SEQ_NO"]=TRANS_NO
                         cols=",".join(map(str, row.keys()))
                         v_list=[]
@@ -83,7 +105,6 @@ def cancel_transaction(request):
                         query="insert into trn_data_rev(" +cols + val
                         mycursor.execute(query,v_list)
                     list3.append(json_object)
-            print(54321)
             for json_object in list3:
                 #Taking a record from STG_TRN_DATA of 1 record.
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
@@ -287,41 +308,36 @@ def get_cost_item_location(request):
             connection.close()      
             
             
-            
+ 
+           
 #Update and Retrieve UNIT_COST from ITEM_LOCATION with input parameters item and location new_cost, also update STG_TRN_DATA
-@csrf_exempt 
+@csrf_exempt
 def cost_update_stg(request):
     if request.method == 'POST':
         try:
-            data_list = json.loads(request.body)           
-            current_user = request.user
+            data_list = json.loads(request.body)  
             mycursor=connection.cursor()
             update_count=0
             il_list=[]
             for data in data_list:
                 key_list=[]
                 for key in data:
-                  if isinstance(data[key], list):
-                      if len(data[key])==0:
-                          key_list.append(key)
                   if data[key]=="" or data[key]=="NULL":
                       key_list.append(key)
+                #print(key_list)
                 for key in key_list:
                    data.pop(key)
-                data.pop("ITEM_DESC")
-                data.pop("LOCATION_NAME")
-                data.pop("QTY")
-                data['UNIT_COST'] =int(data['UNIT_COST'] )
+                data['UNIT_COST'] =Decimal(data['UNIT_COST'] )
                 if data['UNIT_COST'] >0:
                     mycursor.execute('SELECT * FROM item_location WHERE ITEM={} AND LOCATION={};'.format(data['ITEM'],data['LOCATION']))
                     if mycursor.rowcount>0:
                         cost_rec = pd.read_sql('SELECT UNIT_COST,ITEM_SOH FROM item_location WHERE ITEM={} AND LOCATION={};'.format(data['ITEM'],data['LOCATION']),connection)    
                         cost_rec=(cost_rec.values)
                         l_counter=0
-                        if len(cost_rec)>0:
-                            old_cost=cost_rec[0][0]                
+                        old_cost=Decimal(cost_rec[0][0])
+                        if len(cost_rec)>0 and old_cost != data["UNIT_COST"]:                                            
                             qty=cost_rec[0][1]
-                            cost=old_cost - data['UNIT_COST']                        
+                            cost=float(old_cost - data['UNIT_COST'] )
                             I_dict=dict()
                             #New TRAN_SEQ_NO
                             l_counter=l_counter+1
@@ -336,9 +352,11 @@ def cost_update_stg(request):
                             I_dict['UNIT_COST']=cost
                             I_dict['TOTAL_COST']=(cost*qty)
                             I_dict['CREATE_DATETIME']=datetime.today()
-                            I_dict['CREATE_ID']=str(current_user)
+                            I_dict['CREATE_ID']=data['CREATE_ID']
                             I_dict["LOCATION"]=data['LOCATION']
                             I_dict["ITEM"]=data['ITEM']
+                            I_dict["AREF"]=1
+                            I_dict["REV_NO"]=1
                             #inserting into STG_TRN_DATA
                             cols=",".join(map(str, I_dict.keys()))                    
                             v_list=[]
@@ -362,18 +380,19 @@ def cost_update_stg(request):
                                     update_count=update_count+1
                                     il_list.extend([[data['ITEM'],data['LOCATION']]])
                             else:
-                               connection.rollback()    
+                               connection.rollback()  
             if update_count>0:
                 return JsonResponse({"status": 200,"message": f"Records updated : {update_count} "})
             else:
                 return JsonResponse({"status": 500,"message": f"Records updated : {update_count} "})
         except Exception as error:
             return JsonResponse({"status": 500, "message":str(error)})
-        except ValueError:
-            return JsonResponse({"status": 500, "message": "error"})
+        #except ValueError:
+            #return JsonResponse({"status": 500, "message": "error"})
         finally:
             mycursor.close()
             connection.close()
+
             
 #location validation from LOCATION table: 
 @csrf_exempt            

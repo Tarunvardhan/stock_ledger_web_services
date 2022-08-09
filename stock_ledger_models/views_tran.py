@@ -150,16 +150,19 @@ def trn_data_history_table(request):
             for keys_2 in json_object:
                 if isinstance(json_object[keys_2], list):
                     count=1
-            if count==1:
-                for keys1 in json_object:
-                    if isinstance(json_object[keys1], list):
-                        if len(json_object[keys1])>1:
-                            json_object[keys1]=str(tuple(json_object[keys1]))
-                    else:
-                        json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3 SCL on TDH.HIER3=SCL.HIER3 AND {}".format(' '.join('TDH.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+            if len(json_object)==0:
+                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3 SCL on TDH.HIER3=SCL.HIER3 AND "
             else:
-                query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH left join item_dtl ITD on TDH.ITEM =ITD.ITEM left join location LOC on TDH.location=LOC.location left join trn_type_dtl TTD on TDH.trn_type=TTD.trn_type and TDH.aref=TTD.aref left join hier1 DT on TDH.HIER1 = DT.HIER1 left join hier2 CL on TDH.HIER2 =CL.HIER2 left join hier3 SCL on TDH.HIER3=SCL.HIER3 AND {}".format(' '.join('TDH.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                if count==1:
+                    for keys1 in json_object:
+                        if isinstance(json_object[keys1], list):
+                            if len(json_object[keys1])>1:
+                                json_object[keys1]=str(tuple(json_object[keys1]))
+                        else:
+                            json_object[keys1]=("('"+str(json_object[keys1])+"')")
+                    query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TDH.ITEM=ITD.ITEM AND LOC.LOCATION=TDH.LOCATION AND TDH.hier1=DT.hier1 AND TDH.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=TDH.hier2 AND SCL.hier3=TDH.hier3 AND IFNULL(TDH.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TDH.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                else:
+                    query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TDH.ITEM=ITD.ITEM AND LOC.LOCATION=TDH.LOCATION AND TDH.hier1=DT.hier1 AND TDH.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=TDH.hier2 AND SCL.hier3=TDH.hier3 AND IFNULL(TDH.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TDH.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
@@ -208,15 +211,13 @@ def trn_data_rev_table(request):
                 keys=[]
                 #Removing NULL and Empty columns.
                 for key in json_object:
-                    if json_object[key]=="NULL" or json_object[key]=="":
-                        json_object[key]=None
+                    if json_object[key]=="NULL" or json_object[key]=="" or json_object[key]==None:
                         keys.append(key)
                     if key=="ITEM_DESC" or key=="HIER1_DESC" or key=="HIER2_DESC" or key=="HIER3_DESC" or key=="LOCATION_NAME" or key=="TRN_NAME" or key=="ARCHIVE_DATETIME":
                         keys.append(key)
                 for k in keys:
                     json_object.pop(k)
                 list1.append(json_object)
-            
             for json_object in list1:
                 #Storing the value of TRAN_SEQ_NO column
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
@@ -263,21 +264,41 @@ def trn_data_rev_table(request):
                                 remove.append(key)   
                         else:
                             if json_object[key]==rec1[key]:
-                                remove.append(key)  
+                                remove.append(key) 
                     for p in remove:
                         json_object.pop(p)
                 json_object["TRAN_SEQ_NO"]=TRANS_NO
-                list2.append(json_object)
+                list2.append(json_object)  
             for json_object in list2:
                 #Storing the value of TRAN_SEQ_NO column
                 TRANS_NO=json_object.get("TRAN_SEQ_NO", None)
                 json_object.pop("TRAN_SEQ_NO")
+                R_keys11=[]
+                ARCHIEVE_DATETIME=l_dict["ARCHIEVE_DATETIME"]
+                #fetching columns names
+                mycursor.execute("desc trn_data_rev")
+                d_type=mycursor.fetchall()
+                list_type=[]
+                list_val1=[]
+                for col2 in d_type:
+                    list_val1.append(col2[0])
+                    if col2[0] not in rec1:
+                        list_type.append(col2[0])
+                for h1 in list_type:
+                    list_val1.remove(h1)
                 if len(json_object)>0:
                     D_keys=[]
                     for row in res_list:
+                        #Removing extra columns from trn_data_history table when compared with STG_TRN_DATA table
+                        for f11 in row:
+                            if f11 not in list_val1:
+                                R_keys11.append(f11)       
+                        for f21 in R_keys11:
+                            row.pop(f21)
+                        R_keys11.clear()
                         #Removing NULL and Empty columns.
                         for k1 in row:
-                            if row[k1]=="" or (row[k1])=="NULL":
+                            if row[k1]=="" or (row[k1])=="NULL" or row[k1]==None:
                                 D_keys.append(k1) 
                         for k1 in D_keys:
                             row.pop(k1)
@@ -285,11 +306,10 @@ def trn_data_rev_table(request):
                         json_object["TRAN_SEQ_NO"]=TRANS_NO
                         #inserting the data.
                         row["CREATE_ID"]=str(current_user)
+                        row["UPDATE_DATETIME"]=ARCHIEVE_DATETIME
                         row["TRAN_SEQ_NO"]=TRANS_NO
                         cols=",".join(map(str, row.keys()))
                         v_list=[]
-                        print(1)
-                        print(row)
                         val=') VALUES('
                         for v in row.values():
                             if v== None:
@@ -339,6 +359,8 @@ def trn_data_rev_table(request):
                         rec2.pop(f2)
                     l_counter=0 
                     for item in res_list:
+                        for key in json_object:
+                            item[key]=json_object[key]
                         #Removing extra columns from TRN_DATA_HISTORY table when compared with STG_TRN_DATA table
                         for f3 in item:
                             if f3 not in rec2:
@@ -353,8 +375,6 @@ def trn_data_rev_table(request):
                         for k2 in D_keys1:
                             item.pop(k2)
                         D_keys1.clear()
-                        for key in json_object:
-                            item[key]=json_object[key]
                         #Creating a new TRAN_SEQ_NO number
                         l_counter=l_counter+1
                         d= str(datetime.now()).replace('-',"").replace(':',"").replace(' ',"").replace('.',"")

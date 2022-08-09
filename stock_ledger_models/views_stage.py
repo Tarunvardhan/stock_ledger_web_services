@@ -247,3 +247,31 @@ def retrieve_err_stg(request):
             return JsonResponse({"status": 500, "message":str(error)})
         except ValueError:
             return JsonResponse({"status": 500, "message": "error"})
+
+
+
+#Fetching all the column values from ERR_TRN_DATA table:
+def stg_fin(request):
+    if request.method == 'GET':
+        try:
+            query="select * from stg_fin_data"
+            result=pd.read_sql(query,connection)
+            result = result.replace(np.NaN, None, regex=True)
+            res_list=[]
+            for val1 in result.values:
+                count=0
+                rec={}
+                for col in result.columns:
+                    rec[col]=val1[count]
+                    count=count+1
+                res_list.append(rec)
+                
+            if len(res_list)==0:
+                return JsonResponse({"status": 500, "message":"NO DATA FOUND"})
+            else:
+                return JsonResponse(res_list,content_type="application/json",safe=False)
+        except Exception as error:
+            return JsonResponse({"status": 500, "message":str(error)})
+        except ValueError:
+            return JsonResponse({"status": 500, "message": "error"})
+
