@@ -180,7 +180,6 @@ def err_trn_data_table(request):
     if request.method == 'POST':
         try:
             json_object = json.loads(request.body)
-            print(json_object)
             json_object=json_object[0]
             keys=[]
             mycursor=connection.cursor()
@@ -217,17 +216,15 @@ def err_trn_data_table(request):
                 query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM err_trn_data ETD left join item_dtl ITD on ETD.ITEM =ITD.ITEM  left join location LOC on ETD.location=LOC.location left join trn_type_dtl TTD on ETD.trn_type=TTD.trn_type and ETD.aref=TTD.aref left join hier1 DT on ETD.HIER1 = DT.HIER1 left join hier2 CL on ETD.HIER2 =CL.HIER2 left join hier3  SCL on ETD.HIER3=SCL.HIER3 AND {}".format(' '.join('ETD.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
             else:
                 query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM err_trn_data ETD left join item_dtl ITD on ETD.ITEM =ITD.ITEM  left join location LOC on ETD.location=LOC.location left join trn_type_dtl TTD on ETD.trn_type=TTD.trn_type and ETD.aref=TTD.aref left join hier1 DT on ETD.HIER1 = DT.HIER1 left join hier2 CL on ETD.HIER2 =CL.HIER2 left join hier3  SCL on ETD.HIER3=SCL.HIER3 AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
-                
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             else:
                 query=query[:-4]+';'
-                print(query)
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, "NULL", regex=True)
+            results55 =  results55.replace(np.NaN, None, regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -235,7 +232,8 @@ def err_trn_data_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        rec[col5]=int(rec[col5])
+                        if rec[col5]!=None:
+                            rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:
                 return JsonResponse({"status": 500, "message": "NO DATA FOUND"})

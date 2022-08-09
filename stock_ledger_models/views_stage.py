@@ -81,19 +81,26 @@ def stg_trn(request):
                 for key in R_keys:
                     row["LOCATION_TYPE"]=row.pop(key)
                 R_keys.clear()
+                for keys1 in row:
+                    if keys1=="TRN_TYPE":
+                        TRN_TYPE=row["TRN_TYPE"]
+                        query1=pd.read_sql("SELECT TRN_TYPE,AREF FROM trn_type_dtl where TRN_NAME='{}'".format(TRN_TYPE),connection)
+                        for val in query1.values:
+                            count=0
+                            l_dict={}
+                            for col in query1.columns:
+                                l_dict[col]=val[count]
+                                count=count+1
                 l_counter=l_counter+1
                 d= str(datetime.now()).replace('-',"").replace(':',"").replace(' ',"").replace('.',"")
                 unique_id=d+str(l_counter)+'STG'
                 row["TRAN_SEQ_NO"]=unique_id
+                row["TRN_TYPE"]=l_dict["TRN_TYPE"]
+                row["AREF"]=l_dict["AREF"]
                 row["PROCESS_IND"]='N'
                 row["CREATE_DATETIME"]=str(datetime.now())
                 row["CREATE_ID"]=str(current_user)
                 row["REV_NO"]=1
-                mycursor.execute("SELECT TRN_TYPE FROM trn_type_dtl WHERE TRN_NAME="+'"'+(str(row["TRN_TYPE"]))+'"')
-                #print(mycursor.fetchall()[0][0])
-                res=mycursor.fetchall()
-                res=res[0][0]
-                row["TRN_TYPE"]=str(res)
                 cols=",".join(map(str, row.keys()))
                 v_list=[]
                 val=') VALUES('
@@ -217,7 +224,7 @@ def retrieve_err_stg(request):
             else:
                 query=query[:-4]+";"
             result=pd.read_sql(query,connection)
-            result =  result.replace(np.NaN, "NULL", regex=True)
+            result =  result.replace(np.NaN, None, regex=True)
             res_list=[]                
             for val in result.values:
                 count=0
@@ -226,9 +233,9 @@ def retrieve_err_stg(request):
                     l_dict[col]=val[count]
                     count=count+1
                 #converting LOCATION ,REV_NO  to INTEGER
-                if l_dict["LOCATION"] !="NULL":
+                if l_dict["LOCATION"] !=None:
                     l_dict["LOCATION"]=int(l_dict["LOCATION"])
-                if  l_dict["REV_NO"] !="NULL":
+                if  l_dict["REV_NO"] !=None:
                     l_dict["REV_NO"]=int(l_dict["REV_NO"])
                 #Appending each row
                 res_list.append(l_dict)

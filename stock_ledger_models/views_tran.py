@@ -103,7 +103,8 @@ def trn_data_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        rec[col5]=int(rec[col5])
+                        if rec[col5]!=None:
+                            rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:
                 return JsonResponse({"status": 500, "message": "NO DATA FOUND"})
@@ -175,7 +176,8 @@ def trn_data_history_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        rec[col5]=int(rec[col5])
+                        if rec[col5]!=None:
+                            rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:
                 return JsonResponse({"status": 500, "message": "NO DATA FOUND"})

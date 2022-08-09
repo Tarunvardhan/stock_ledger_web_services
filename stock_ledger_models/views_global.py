@@ -654,11 +654,9 @@ def system_config_table(request):
                 query="SELECT SC.*,TTD.TRN_NAME FROM system_config SC,trn_type_dtl TTD WHERE SC.TRN_TYPE=TTD.TRN_TYPE AND SC.AREF=TTD.AREF AND {}".format(' '.join('SC.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
-                print("1: ",query)
                 results55=pd.read_sql(query,connection)
             else:
                 query=query[:-4]+';'
-                print("2: ",query)
                 results55=pd.read_sql(query,connection)   
             res_list=[]
             rec={}
