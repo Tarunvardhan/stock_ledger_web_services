@@ -164,16 +164,19 @@ def daily_sku_table(request):
             for keys_2 in json_object:
                 if isinstance(json_object[keys_2], list):
                     count=1
-            if count==1:
-                for keys1 in json_object:
-                    if isinstance(json_object[keys1], list):
-                        if len(json_object[keys1])>1:
-                            json_object[keys1]=str(tuple(json_object[keys1]))
-                    else:
-                        json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DS left join item_dtl ITD on DS.ITEM =ITD.ITEM left join location LOC on DS.location=LOC.location left join trn_type_dtl TTD on DS.trn_type=TTD.trn_type and DS.aref=TTD.aref left join hier1 DT on DS.HIER1 = DT.HIER1 left join hier2 CL on DS.HIER2 =CL.HIER2 left join hier3  SCL on DS.HIER3=SCL.HIER3 AND {}".format(' '.join('DS.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+            if len(json_object)==0:
+                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DS left join item_dtl ITD on DS.ITEM =ITD.ITEM left join location LOC on DS.location=LOC.location left join trn_type_dtl TTD on DS.trn_type=TTD.trn_type and DS.aref=TTD.aref left join hier1 DT on DS.HIER1 = DT.HIER1 left join hier2 CL on DS.HIER2 =CL.HIER2 left join hier3  SCL on DS.HIER3=SCL.HIER3 AND "
             else:
-                query="SELECT DS.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DS left join item_dtl ITD on DS.ITEM =ITD.ITEM left join location LOC on DS.location=LOC.location left join trn_type_dtl TTD on DS.trn_type=TTD.trn_type and DS.aref=TTD.aref left join hier1 DT on DS.HIER1 = DT.HIER1 left join hier2 CL on DS.HIER2 =CL.HIER2 left join hier3  SCL on DS.HIER3=SCL.HIER3 AND {}".format(' '.join('DS.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                if count==1:
+                    for keys1 in json_object:
+                        if isinstance(json_object[keys1], list):
+                            if len(json_object[keys1])>1:
+                                json_object[keys1]=str(tuple(json_object[keys1]))
+                        else:
+                            json_object[keys1]=("('"+str(json_object[keys1])+"')")
+                    query="SELECT DR.*,DR.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DR,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE DR.ITEM=ITD.ITEM AND LOC.LOCATION=DR.LOCATION AND DR.hier1=DT.hier1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=DR.hier2 AND SCL.hier3=DR.hier3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                else:
+                    query="SELECT DR.*,DR.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DR,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE DR.ITEM=ITD.ITEM AND LOC.LOCATION=DR.LOCATION AND DR.hier1=DT.hier1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=DR.hier2 AND SCL.hier3=DR.hier3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)

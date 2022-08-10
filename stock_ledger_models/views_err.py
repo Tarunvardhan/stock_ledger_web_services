@@ -221,11 +221,9 @@ def err_trn_data_table(request):
                     query="SELECT ETD.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM err_trn_data ETD,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE ETD.ITEM=ITD.ITEM AND LOC.LOCATION=ETD.LOCATION AND ETD.hier1=DT.hier1 AND ETD.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=ETD.hier2 AND SCL.hier3=ETD.hier3 AND IFNULL(ETD.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('ETD.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
-                print(query)
                 results55=pd.read_sql(query,connection)
             else:
                 query=query[:-4]+';'
-                print(query)
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}

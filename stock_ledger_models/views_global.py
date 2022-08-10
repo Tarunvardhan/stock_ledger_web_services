@@ -31,7 +31,6 @@ def cancel_transaction(request):
     if request.method == 'POST':
         try:
             json_object_list = json.loads(request.body)
-            current_user = request.user
             list1=[]
             list3=[]
             count_1=0
@@ -89,7 +88,6 @@ def cancel_transaction(request):
                             row.pop(k1)
                         D_keys.clear()
                         #inserting the data.
-                        row["CREATE_ID"]=str(current_user)
                         row["UPDATE_DATETIME"]=ARCHIEVE_DATETIME
                         row["TRAN_SEQ_NO"]=TRANS_NO
                         cols=",".join(map(str, row.keys()))
@@ -164,7 +162,6 @@ def cancel_transaction(request):
                         item1["REV_TRN_NO"]=TRANS_NO
                         item1["QTY"]=item1["QTY"]*(-1)
                         item1["CREATE_DATETIME"]=str(datetime.now())
-                        item1["CREATE_ID"]=str(current_user)
                         #Values for inserting into the table
                         cols=",".join(map(str, item1.keys()))
                         v_list=[]
