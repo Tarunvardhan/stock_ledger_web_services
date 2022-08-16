@@ -76,6 +76,7 @@ def del_err_trn_data(request):
             mycursor=connection.cursor()
             for data in data_list: 
                 TRAN_SEQ_NO=data['TRAN_SEQ_NO']
+                CREATE_ID=data['CREATE_ID']
                 data.pop('TRAN_SEQ_NO')
                 data.pop('ERR_MSG')
                 data.pop('ERR_SEQ_NO')
@@ -118,7 +119,7 @@ def del_err_trn_data(request):
                             d= str(datetime.now()).replace('-',"").replace(':',"").replace(' ',"").replace('.',"")
                             l_counter=l_counter+1
                             unique_id=d+str(l_counter)+'EPS'
-                            current_user = request.user
+                            #current_user = request.user
                             
                             #Retrieving the record and inserting into STG_TRN_DATA before deleting
                             rec.pop('ERR_MSG')
@@ -126,7 +127,6 @@ def del_err_trn_data(request):
                             rec.pop('HIER1')
                             rec.pop('HIER2')
                             rec.pop('HIER3')
-                    
                             for key in data:
                                 if key in rec:
                                     rec[key]=data[key]
@@ -135,7 +135,7 @@ def del_err_trn_data(request):
                             rec['PROCESS_IND']='N'
                             rec['TRAN_SEQ_NO']=unique_id
                             rec['CREATE_DATETIME']= (datetime.now())                    
-                            rec['CREATE_ID']=str(current_user)
+                            rec['CREATE_ID']=CREATE_ID
                             rec['REV_NO']=rec['REV_NO']+1
                             for key in data:
                                 rec[key]=data[key]

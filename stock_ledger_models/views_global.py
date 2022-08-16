@@ -283,7 +283,7 @@ def get_cost_item_location(request):
                     else:
                         query=query+key+" in "+str(tuple(data[key]))+" AND "
                     query=query[:-4]+";"
-                    print(query)
+                    #print(query)
                     result = pd.read_sql(query,connection)
                     res_list=[]
                     for val1 in result.values:
@@ -593,7 +593,7 @@ def lov_item_dtl(request):
            for key in key_list:
                 data.pop(key)
            if  len(data)==0:
-               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.HIER1, DP.HIER1_DESC, ID.HIER2, C.HIER2_DESC, ID.HIER3, SC.HIER3_DESC FROM item_dtl ID, hier1 DP, hier2 C, hier3 SC WHERE DP.HIER1=ID.HIER1 AND C.HIER2=ID.HIER2 AND SC.HIER3=ID.HIER3 ORDER BY ID.HIER1 ",connection)#
+               result = pd.read_sql("SELECT ID.ITEM, ID.ITEM_DESC, ID.HIER1, DP.HIER1_DESC, ID.HIER2, C.HIER2_DESC, ID.HIER3, SC.HIER3_DESC FROM item_dtl ID, hier1 DP, hier2 C, hier3 SC WHERE DP.HIER1=ID.HIER1 AND C.HIER2=ID.HIER2 AND SC.HIER3=ID.HIER3 ORDER BY cast(ID.HIER1 as unsigned) ",connection)#
                res_list=[]                
                for val in result.values:
                    count=0
@@ -613,8 +613,7 @@ def lov_item_dtl(request):
                        query=query+str(key)+" in ("+str(data[key])+") AND "
                    else:
                        query=query+str(key)+" in "+str(tuple(data[key]))+" AND "
-               query=query[:-4]+" order by hier1;"
-               print(query)
+               query=query[:-4]+" order by cast(hier1 as unsigned);"
                result=pd.read_sql(query,connection)
                res_list=[]                
                for val in result.values:

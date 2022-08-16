@@ -58,7 +58,7 @@ def stg_trn(request):
     if request.method == 'POST':
         try: 
             json_object = json.loads(request.body)
-            current_user = request.user
+            #current_user = request.user
             D_keys=[]
             P_keys=[]
             R_keys=[]
@@ -99,7 +99,7 @@ def stg_trn(request):
                 row["AREF"]=l_dict["AREF"]
                 row["PROCESS_IND"]='N'
                 row["CREATE_DATETIME"]=str(datetime.now())
-                row["CREATE_ID"]=str(current_user)
+                #row["CREATE_ID"]=str(current_user)
                 row["REV_NO"]=1
                 cols=",".join(map(str, row.keys()))
                 v_list=[]

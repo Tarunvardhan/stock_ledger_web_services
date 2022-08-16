@@ -167,10 +167,10 @@ def trn_data_history_table(request):
                 else:
                     query="SELECT TDH.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM trn_data_history TDH,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE TDH.ITEM=ITD.ITEM AND LOC.LOCATION=TDH.LOCATION AND TDH.hier1=DT.hier1 AND TDH.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=TDH.hier2 AND SCL.hier3=TDH.hier3 AND IFNULL(TDH.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('TDH.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
-                query=query[:-4]+';'
+                query=query[:-4]+' ORDER BY cast(TDH.ITEM as unsigned);'
                 results55=pd.read_sql(query,connection)
             else:
-                query=query[:-4]+';'
+                query=query[:-4]+' ORDER BY cast(TDH.ITEM as unsigned);'
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
@@ -295,7 +295,7 @@ def trn_data_rev_table(request):
                 if len(json_object)>0:
                     D_keys=[]
                     for row in res_list:
-                        #Removing extra columns from trn_data_history table when compared with STG_TRN_DATA table
+                        #Removing extra columns from trn_data_history table when compared with  table
                         for f11 in row:
                             if f11 not in list_val1:
                                 R_keys11.append(f11)       

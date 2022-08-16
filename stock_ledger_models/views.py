@@ -267,7 +267,7 @@ def GL_ACCOUNT_INSERT(request):
     if request.method == 'POST':
         try:
             json_object_list=json.loads(request.body)
-            current_user = request.user
+            #current_user = request.user
             keys=[]
             #res_list=[]
             mycursor=connection.cursor()
