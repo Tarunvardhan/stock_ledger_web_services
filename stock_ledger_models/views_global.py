@@ -765,7 +765,6 @@ def sub_cost(request):
     if request.method == 'POST':
         try:
             data=json.loads(request.body)
-            print(data)
             data=data[0]
             if len(data["AMOUNT"])>0:
                 amount=int(data["AMOUNT"])
@@ -798,7 +797,6 @@ def sub_cost(request):
                     query=query+";"
                 else:
                     query=query+";"
-                print(query)
                 my_data = pd.read_sql(query,connection)
                 #print(my_data)
                 res_list=[]                
@@ -811,15 +809,11 @@ def sub_cost(request):
                         l_dict[col]=val[count]
                         count=count+1
                     res_list.append(l_dict)
-                print(total_soh)
                 #print(res_list)
                 for obj in res_list:
                     for key in obj:
                         if key=="ITEM_SOH":
-                            print(int(obj[key]),"        ",total_soh)
                             per=((obj[key]/total_soh)*100)
-                            print("per::",per)
-                            print("amount:",(per/100))
                             obj["UNIT_COST"]=obj["UNIT_COST"]+(per/100)*amount
                 if len(res_list)>0:
                     return JsonResponse(res_list, content_type="application/json",safe=False)
