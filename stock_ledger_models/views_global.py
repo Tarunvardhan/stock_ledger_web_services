@@ -757,3 +757,75 @@ def fetch_item_location(request):
             return JsonResponse({"status": 500, "message":str(error)})
         finally:
             connection.close()
+
+
+
+@csrf_exempt
+def sub_cost(request):
+    if request.method == 'POST':
+        try:
+            data=json.loads(request.body)
+            print(data)
+            data=data[0]
+            if len(data["AMOUNT"])>0:
+                amount=int(data["AMOUNT"])
+                data.pop("AMOUNT")
+                total_soh=0
+                r_list=[]
+                query="SELECT IT.ITEM,IT.ITEM_DESC,L.LOCATION,L.LOCATION_NAME,IL.UNIT_COST,IL.ITEM_SOH FROM item_dtl IT,location L ,item_location IL WHERE IL.ITEM=IT.ITEM AND IL.LOCATION=L.LOCATION "
+                for key in data:
+                   if isinstance(data[key], list):
+                       if len(data[key])==0:
+                           r_list.append(key)
+                   if data[key]=="" or data[key]=="NULL":
+                       r_list.append(key)
+                for key in r_list:
+                    data.pop(key)
+                if len(data)>0:
+                    for key in data:
+                        if key=="LOCATION" or key=="ITEM":
+                            if len(data[key])==1:
+                                data[key]=(data[key])[0]
+                                query=query+" AND IL."+key+" in ('"+str(data[key])+"')"
+                            else:
+                                query=query+" AND IL."+key+" in "+str(tuple(data[key]))
+                        else:
+                            if len(data[key])==1:
+                                data[key]=(data[key])[0]
+                                query=query+" AND IT."+key+" in ('"+str(data[key])+"') "
+                            else:
+                                query=query+" AND IT."+key+" in "+str(tuple(data[key]))
+                    query=query+";"
+                else:
+                    query=query+";"
+                print(query)
+                my_data = pd.read_sql(query,connection)
+                #print(my_data)
+                res_list=[]                
+                for val in my_data.values:
+                    count=0
+                    l_dict={}
+                    for col in my_data.columns:
+                        if col=="ITEM_SOH":
+                            total_soh=total_soh+val[count]
+                        l_dict[col]=val[count]
+                        count=count+1
+                    res_list.append(l_dict)
+                print(total_soh)
+                #print(res_list)
+                for obj in res_list:
+                    for key in obj:
+                        if key=="ITEM_SOH":
+                            print(int(obj[key]),"        ",total_soh)
+                            per=((obj[key]/total_soh)*100)
+                            print("per::",per)
+                            print("amount:",(per/100))
+                            obj["UNIT_COST"]=obj["UNIT_COST"]+(per/100)*amount
+                if len(res_list)>0:
+                    return JsonResponse(res_list, content_type="application/json",safe=False)
+                else:
+                    return JsonResponse({"status": 500, "message": "No Data Found"})
+            else:
+                return JsonResponse({"status": 500, "message": "Please enter the valid amount"})
+        except Exception as error:
+            return JsonResponse({"status": 500, "message":str(error)})
