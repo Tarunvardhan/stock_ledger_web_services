@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from django.shortcuts import render
 
 import json
@@ -152,7 +153,7 @@ def GL_ACCOUNT_table(request):
                 else:
                     query=query[:-4]+';'
                     results55=pd.read_sql(query,connection)
-                results55 = results55.replace(np.NaN,None, regex=True)
+                results55 = results55.replace(np.NaN,"NULL", regex=True)
 
                 res_list=[]
                 rec={}
@@ -163,9 +164,10 @@ def GL_ACCOUNT_table(request):
                         count=count+1
                     for col5 in list_type:
                         if col5 in rec:
-                            if rec[col5]!=None:
+                            if rec[col5]!=None or rec[col5]!="NULL":
                                 rec[col5]=int(rec[col5])
                     res_list.append(rec.copy())
+                #print(res_list)
             if len(res_list)==0:
                 return JsonResponse({"status": 500, "message": "NO DATA FOUND"})
             else:
@@ -191,17 +193,18 @@ def GL_ACCOUNT_update(request):
             mycursor=connection.cursor()
             u_count=0
             for json_object in json_object_list:
-                key_list=[]
+                #key_list=[]
                
-                for key in json_object:
-                  if json_object[key]=="" or json_object[key]=="NULL":
-                      key_list.append(key)
-                for key in key_list:
-                   json_object.pop(key)
+                #for key in json_object:
+                #  if json_object[key]=="" or json_object[key]=="NULL":
+                #      key_list.append(key)
+                #for key in key_list:
+                #   json_object.pop(key)
                
                 s_query="SELECT * FROM gl_account WHERE PRIMARY_ACCOUNT= "+str(json_object["PRIMARY_ACCOUNT"])+";"
+                print(s_query)
                 result=pd.read_sql(s_query,connection)
-
+                
                 for val in result.values:
                     count=0
                     l_dict={}
@@ -224,10 +227,12 @@ def GL_ACCOUNT_update(request):
                         else:
                             u_query=u_query+str(col)+"="+"'"+str(u_dict[col])+"'"+","
                     u_query=u_query[:-1]+" WHERE PRIMARY_ACCOUNT="+str(json_object["PRIMARY_ACCOUNT"])+";"
+                    print("query:     ",u_query)
                     mycursor.execute(u_query)
+                    
                     if mycursor.rowcount >0:
                         u_count=u_count+1
-            return JsonResponse({"status": 200,"message": f"Records updated: {u_count} "})
+            return JsonResponse({"status": 200, "message": f"Records updated: {u_count}"})
         except Exception as error:
             return JsonResponse({"status": 500, "message": str(error)})
         finally:
@@ -249,7 +254,7 @@ def currency_gl(request):
                     count=count+1
                 res_list.append(rec)
             if len(res_list)==0:
-                return JsonResponse({"Error ":"No Data Found"})
+                return JsonResponse({"status": 500,"message":"No Data Found"})
             else:
                 return JsonResponse(res_list, content_type="application/json",safe=False)
            
@@ -267,7 +272,7 @@ def GL_ACCOUNT_INSERT(request):
     if request.method == 'POST':
         try:
             json_object_list=json.loads(request.body)
-            #current_user = request.user
+            print(json_object_list)
             keys=[]
             #res_list=[]
             mycursor=connection.cursor()
@@ -299,11 +304,17 @@ def GL_ACCOUNT_INSERT(request):
                         val=val+'%s,'
                 val=val[:-1]+')'
                 query="insert into gl_account(" +cols + val
+                print(query,v_list)
                 mycursor.execute(query,v_list)
+                print("executed",mycursor.rowcount)
                 connection.commit()
             return JsonResponse({"status": 201, "message": "Data Inserted"})
         except Exception as error:
-            return JsonResponse({"status": 500, "message": str(error)})
+            if "Duplicate entry" in str(error):
+                return JsonResponse({"status": 500, "message": "Duplicate Entry"})
+                print(123)
+            else:
+                return JsonResponse({"status": 500, "message": str(error)})
         finally:
             mycursor.close()
             connection.close()

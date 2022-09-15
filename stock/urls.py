@@ -16,10 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from stock_ledger_models.views_err import err_trn,del_err_trn_data,err_trn_data_table
-from stock_ledger_models.views_daily import count_pndg_dly_rollup,daily_sku_table,daily_rollup_table,daily_rec_table
+from stock_ledger_models.views_daily import count_pndg_dly_rollup,daily_sku_table,daily_rollup_table,daily_rec_table,Daily_view
 from stock_ledger_models.views_stage import count_stg_trn_data,stg_trn,retrieve_stg,retrieve_err_stg,stg_fin
 from stock_ledger_models.views_global import cancel_transaction,system_conf,location_valid,currency_valid,item_location_valid,get_cost_item_location,cost_update_stg,lov_item_dtl,system_config_table,fetch_item_location
-from stock_ledger_models.views_tran import count_trn_data,trn_data_table,trn_data_history_table,trn_data_rev_table,trn_data_rev_1_table
+from stock_ledger_models.views_tran import count_trn_data,trn_data_table,trn_data_history_table,trn_data_rev_table,trn_data_rev_1_table,trn_type_dtl_table,trn_type_dtl_list
 from stock_ledger_models.views import sample,GL_ACCOUNT_table,GL_ACCOUNT_update,GL_ACCOUNT_INSERT,item_valid,currency_gl
 
 urlpatterns = [
@@ -49,7 +49,7 @@ urlpatterns = [
     path('lov_item_dtl/',lov_item_dtl),                             # "ITEM","ITEM_DESC","CLASS","DEPT","SUBCLASS" validation from lov_item_dtl . 
     path('system_config_tab/',system_config_table),                 #Fetching the data from SYSTEM_CONFIG based on the input parameters:
     path('gl_account_tab/',GL_ACCOUNT_table),                       #Fetching the data from GL_ACCOUNT based on the input parameters:
-    path('item_loc_data/',fetch_item_location),           #Fetch data from ITEM_LOCATION tables
+    path('item_loc_data/',fetch_item_location),                     #Fetch data from ITEM_LOCATION tables
     path('daily_rec/',daily_rec_table),                             #Fetching the data from DAILY SKU based on the input parameters.
     path('retrieve_err_stg_data/',retrieve_err_stg),                #Retrieve filtered data from ERR_TRN_DATA and STG_TRN_DATA table using input parameters user and date.
     path('GL_ACCOUNT_update/',GL_ACCOUNT_update),                   #UPDATING - GL_ACCOUNT based on the input 
@@ -57,5 +57,8 @@ urlpatterns = [
     path('item_validation/',item_valid),
     path('currency_gl/',currency_gl),
     path('Retrieve_stg_fin/',stg_fin),
+    path('trn_type_dtl/',trn_type_dtl_table),
+    path('trn_type_dtl_list/',trn_type_dtl_list),
+    path('Daily_view/',Daily_view),
     path('test/',sample)
 ]

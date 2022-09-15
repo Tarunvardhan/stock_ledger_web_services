@@ -31,6 +31,7 @@ def cancel_transaction(request):
     if request.method == 'POST':
         try:
             json_object_list = json.loads(request.body)
+            #print(json_object_list)
             list1=[]
             list3=[]
             count_1=0
@@ -200,6 +201,7 @@ def system_conf(request):
     if request.method == 'POST':
         try:
             json_object_list = json.loads(request.body)
+            print(json_object_list)
             list1=[]
             list2=[]
             mycursor = connection.cursor()
@@ -642,16 +644,19 @@ def system_config_table(request):
             json_object=json_object[0]
             keys=[]
             for key1 in json_object:
+                if key1=="TRN_NAME":
+                    TRN_NAME=json_object.get("TRN_NAME")
+                else:
+                    TRN_NAME=[]
                 if isinstance(json_object[key1], list):
                     if (len(json_object[key1]))==0:
                         json_object[key1]="NULL"
             for key in json_object:
-                if json_object[key]=="NULL" or json_object[key]=="":
+                if json_object[key]=="NULL" or json_object[key]=="" or key=="TRN_NAME":
                     json_object[key]=None
                     keys.append(key)
             for k in keys:
                 json_object.pop(k)
-            
             #checking the inputs are mutliple or not
             count=0
             for keys_2 in json_object:
@@ -671,17 +676,22 @@ def system_config_table(request):
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             else:
-                query=query[:-4]+';'
-                results55=pd.read_sql(query,connection)   
+                if len(TRN_NAME)>0:
+                    query=query[:-4]+' AND TTD.TRN_NAME IN ('+str(TRN_NAME)[1:-1]+');'
+                else:
+                    query=query[:-4]+';'
+                results55=pd.read_sql(query,connection) 
+            print(query)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, None, regex=True)
+            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
                     rec[col4]=val2[count]
                     count=count+1
                 res_list.append(rec.copy())
+            #print(res_list)
             if len(res_list)==0:
                 return JsonResponse({"status": 500, "message": "NO DATA FOUND"})
             else:

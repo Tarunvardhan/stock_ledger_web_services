@@ -184,11 +184,15 @@ def err_trn_data_table(request):
             keys=[]
             mycursor=connection.cursor()
             for key1 in json_object:
+                if key1=="TRN_NAME":
+                    TRN_NAME=json_object.get("TRN_NAME")
+                else:
+                    TRN_NAME=[]
                 if isinstance(json_object[key1], list):
                     if (len(json_object[key1]))==0:
                         json_object[key1]="NULL"
             for key in json_object:
-                if json_object[key]=="NULL" or json_object[key]=="":
+                if json_object[key]=="NULL" or json_object[key]=="" or key=="TRN_NAME":
                     json_object[key]=None
                     keys.append(key)
             for k in keys:
@@ -223,11 +227,14 @@ def err_trn_data_table(request):
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             else:
-                query=query[:-4]+';'
+                if len(TRN_NAME)>0:
+                    query=query[:-4]+' AND TTD.TRN_NAME IN ('+str(TRN_NAME)[1:-1]+');'
+                else:
+                    query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, None, regex=True)
+            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -235,7 +242,7 @@ def err_trn_data_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        if rec[col5]!=None:
+                        if rec[col5]!=None or rec[col5]!="NULL":
                             rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:

@@ -17,6 +17,8 @@ from decimal import *
 from django.core.serializers.python import Serializer
 import numpy as np
 from django.db import connection
+from STOCK_LEDGER_LISTENER.STOCK_LEDGER.GLOBAL_FILES.daily_view import get_daily_view
+#from Stock_ledger.STOCK_LEDGER_LISTENER.STOCK_LEDGER.GLOBAL_FILES.daily_view import get_daily_view
 
 
 class MySerialiser(Serializer):
@@ -33,25 +35,33 @@ def count_pndg_dly_rollup(request):
         count4 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='Y';",connection)
         count5 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='W';",connection)
         count6 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='C';",connection)
-        count7 = pd.read_sql("SELECT RECORDS_CLEANED FROM stg_trn_data_del_records WHERE DATE=curdate() AND PROCESS='PNDG_DLY_ROLLUP'",connection)
+        count7 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='U';",connection)
+        count8 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='P';",connection)
+        count9 = pd.read_sql("SELECT COUNT(PROCESS_IND) FROM pndg_dly_rollup WHERE PROCESS_IND='X';",connection)
+        count10 = pd.read_sql("SELECT RECORDS_CLEANED FROM stg_trn_data_del_records WHERE DATE=curdate() AND PROCESS='PNDG_DLY_ROLLUP'",connection)
         count1=(count1.values)[0][0]
         count2=(count2.values)[0][0]
         count3=(count3.values)[0][0]
         count4=(count4.values)[0][0]
         count5=(count5.values)[0][0]
         count6=(count6.values)[0][0]
-        if len(count7.values)==0:
-            count8=(count4+count5+count6)
+        count7=(count7.values)[0][0]
+        count8=(count8.values)[0][0]
+        count9=(count9.values)[0][0]
+        count12=count2+count5+count7+count8
+        if len(count10.values)==0:
+            count11=(count6)
         else:
-            count7=int((count7.values)[0][0])
-            count8=(count4+count5+count6+count7)
+            count10=int((count10.values)[0][0])
+            count11=(count6+count10)
         return JsonResponse(
             {
                 "Ready to process": f"{count1}",
-                "In process": f"{count2}",
+                "In process": f"{count12}",
                 "Error records": f"{count3}",
-                "Processed records": f"{count8}"
-            }
+                "Processed records": f"{count11}",
+                "Processed to daily sku": f"{count4}",
+                "Processed to EOW/EOM sku": f"{count9}"           }
         )
 
 #Fetching the data from DAILY ROLLUP based on the input parameters:   
@@ -64,11 +74,15 @@ def daily_rollup_table(request):
             keys=[]
             mycursor=connection.cursor()
             for key1 in json_object:
+                if key1=="TRN_NAME":
+                    TRN_NAME=json_object.get("TRN_NAME")
+                else:
+                    TRN_NAME=[]
                 if isinstance(json_object[key1], list):
                     if (len(json_object[key1]))==0:
                         json_object[key1]="NULL"
             for key in json_object:
-                if json_object[key]=="NULL" or json_object[key]=="":
+                if json_object[key]=="NULL" or json_object[key]=="" or key=="TRN_NAME":
                     json_object[key]=None
                     keys.append(key)
             for k in keys:
@@ -103,11 +117,14 @@ def daily_rollup_table(request):
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             else:
-                query=query[:-4]+';'
+                if len(TRN_NAME)>0:
+                    query=query[:-4]+' AND TTD.TRN_NAME IN ('+str(TRN_NAME)[1:-1]+');'
+                else:
+                    query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, None, regex=True)
+            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -115,7 +132,7 @@ def daily_rollup_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        if rec[col5]!=None:
+                        if rec[col5]!=None or rec[col5]!="NULL":
                             rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:
@@ -141,11 +158,15 @@ def daily_sku_table(request):
             keys=[]
             mycursor=connection.cursor()
             for key1 in json_object:
+                if key1=="TRN_NAME":
+                    TRN_NAME=json_object.get("TRN_NAME")
+                else:
+                    TRN_NAME=[]
                 if isinstance(json_object[key1], list):
                     if (len(json_object[key1]))==0:
                         json_object[key1]="NULL"
             for key in json_object:
-                if json_object[key]=="NULL" or json_object[key]=="":
+                if json_object[key]=="NULL" or json_object[key]=="" or key=="TRN_NAME":
                     json_object[key]=None
                     keys.append(key)
             for k in keys:
@@ -173,18 +194,21 @@ def daily_sku_table(request):
                                 json_object[keys1]=str(tuple(json_object[keys1]))
                         else:
                             json_object[keys1]=("('"+str(json_object[keys1])+"')")
-                    query="SELECT DR.*,DR.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DR,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE DR.ITEM=ITD.ITEM AND LOC.LOCATION=DR.LOCATION AND DR.hier1=DT.hier1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=DR.hier2 AND SCL.hier3=DR.hier3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
+                    query="SELECT DR.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DR,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE DR.ITEM=ITD.ITEM AND LOC.LOCATION=DR.LOCATION AND DR.hier1=DT.hier1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=DR.hier2 AND SCL.hier3=DR.hier3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} IN ({}) AND'.format(k,str(json_object[k])[1:-1]) for k in json_object))
                 else:
-                    query="SELECT DR.*,DR.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DR,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE DR.ITEM=ITD.ITEM AND LOC.LOCATION=DR.LOCATION AND DR.hier1=DT.hier1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=DR.hier2 AND SCL.hier3=DR.hier3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
+                    query="SELECT DR.*,ITD.ITEM_DESC,LOC.LOCATION_NAME,TTD.TRN_NAME,DT.HIER1_DESC,CL.HIER2_DESC,SCL.HIER3_DESC FROM daily_sku DR,item_dtl ITD,location LOC,trn_type_dtl TTD,hier1 DT,hier2 CL,hier3 SCL WHERE DR.ITEM=ITD.ITEM AND LOC.LOCATION=DR.LOCATION AND DR.hier1=DT.hier1 AND DR.TRN_TYPE=TTD.TRN_TYPE AND CL.hier2=DR.hier2 AND SCL.hier3=DR.hier3 AND IFNULL(DR.AREF,0)=IFNULL(TTD.AREF,0) AND {}".format(' '.join('DR.{} LIKE "%{}%" AND'.format(k,json_object[k]) for k in json_object))
             if len(json_object)==0:
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             else:
-                query=query[:-4]+';'
+                if len(TRN_NAME)>0:
+                    query=query[:-4]+' AND TTD.TRN_NAME IN ('+str(TRN_NAME)[1:-1]+');'
+                else:
+                    query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, None, regex=True)
+            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -192,7 +216,7 @@ def daily_sku_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        if rec[col5]!=None:
+                        if rec[col5]!=None or rec[col5]!="NULL":
                             rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:
@@ -214,15 +238,20 @@ def daily_rec_table(request):
     if request.method == 'POST':
         try:
             json_object = json.loads(request.body)
+            print(json_object)
             json_object=json_object[0]
             keys=[]
             mycursor=connection.cursor()
             for key1 in json_object:
+                if key1=="TRN_NAME":
+                    TRN_NAME=json_object.get("TRN_NAME")
+                else:
+                    TRN_NAME=[]
                 if isinstance(json_object[key1], list):
                     if (len(json_object[key1]))==0:
                         json_object[key1]="NULL"
             for key in json_object:
-                if json_object[key]=="NULL" or json_object[key]=="":
+                if json_object[key]=="NULL" or json_object[key]=="" or key=="TRN_NAME":
                     json_object[key]=None
                     keys.append(key)
             for k in keys:
@@ -257,11 +286,14 @@ def daily_rec_table(request):
                 query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             else:
-                query=query[:-4]+';'
+                if len(TRN_NAME)>0:
+                    query=query[:-4]+' AND TTD.TRN_NAME IN ('+str(TRN_NAME)[1:-1]+');'
+                else:
+                    query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
             res_list=[]
             rec={}
-            results55 =  results55.replace(np.NaN, None, regex=True)
+            results55 =  results55.replace(np.NaN, "NULL", regex=True)
             for val2 in results55.values:
                 count=0
                 for col4 in results55.columns:
@@ -269,7 +301,7 @@ def daily_rec_table(request):
                     count=count+1
                 for col5 in list_type:
                     if col5 in rec:
-                        if rec[col5]!=None:
+                        if rec[col5]!=None or rec[col5]!="NULL":
                             rec[col5]=int(rec[col5])
                 res_list.append(rec.copy())
             if len(res_list)==0:
@@ -282,3 +314,28 @@ def daily_rec_table(request):
             return JsonResponse({"status": 500, "message": "error"})
         finally:
              connection.close()
+
+
+def Daily_view(request):
+    if request.method == 'GET':
+        try:
+            res_list=[]            
+            dataframe=get_daily_view()
+            #dataframe =  dataframe.replace(np.NaN, None, regex=True)
+            #converting to json format
+            #print(list(dataframe.columns))
+            #if !(dataframe.empty):
+            for val in dataframe.values:
+                count=0
+                l_dict={}
+                for col in dataframe.columns:
+                    l_dict[col]=val[count]
+                    count=count+1
+                res_list.append(l_dict)
+                
+            if len(res_list)==0:
+                return JsonResponse({"status": 500, "message": "NO DATA FOUND"})
+            else:
+                return JsonResponse(res_list, content_type="application/json",safe=False)
+        except Exception as error:
+           return JsonResponse({"status": 500, "message": str(error)})
