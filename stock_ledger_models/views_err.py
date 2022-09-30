@@ -180,6 +180,7 @@ def err_trn_data_table(request):
     if request.method == 'POST':
         try:
             json_object = json.loads(request.body)
+            print(json_object)
             json_object=json_object[0]
             keys=[]
             mycursor=connection.cursor()
@@ -232,6 +233,7 @@ def err_trn_data_table(request):
                 else:
                     query=query[:-4]+';'
                 results55=pd.read_sql(query,connection)
+            print(query)
             res_list=[]
             rec={}
             results55 =  results55.replace(np.NaN, "NULL", regex=True)

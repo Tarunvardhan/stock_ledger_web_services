@@ -317,3 +317,29 @@ def GL_ACCOUNT_INSERT(request):
             mycursor.close()
             connection.close()
 
+
+#FETCH currency from CURRENCY table.
+@csrf_exempt
+def primary_gl(request):
+    if request.method == 'GET':
+        try:                  
+            result = pd.read_sql("SELECT PRIMARY_ACCOUNT FROM gl_account",connection)
+            res_list=[]
+            for val1 in result.values:
+                count=0
+                rec={}
+                for col in result.columns:
+                    rec[col]=val1[count]
+                    count=count+1
+                    rec[col]=int(rec[col])
+                res_list.append(rec)
+            if len(res_list)==0:
+                return JsonResponse({"status": 500,"message":"No Data Found"})
+            else:
+                return JsonResponse(res_list, content_type="application/json",safe=False)
+           
+        except Exception as error:
+            return JsonResponse({"status": 500, "message":str(error)})
+        finally:            
+            connection.close()
+

@@ -222,7 +222,7 @@ def retrieve_err_stg(request):
                 query=query[:-6]+";"
             else:
                 query=query[:-4]+";"
-            print(query)
+            #print(query)
             result=pd.read_sql(query,connection)
             #print(result)
             result =  result.replace(np.NaN, "NULL", regex=True)

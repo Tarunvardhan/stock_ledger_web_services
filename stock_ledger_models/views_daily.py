@@ -17,7 +17,7 @@ from decimal import *
 from django.core.serializers.python import Serializer
 import numpy as np
 from django.db import connection
-from STOCK_LEDGER_LISTENER.STOCK_LEDGER.GLOBAL_FILES.daily_view import get_daily_view
+from .Daily_view.daily_view import get_daily_view
 #from Stock_ledger.STOCK_LEDGER_LISTENER.STOCK_LEDGER.GLOBAL_FILES.daily_view import get_daily_view
 
 

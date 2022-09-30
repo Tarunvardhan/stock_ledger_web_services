@@ -1,3 +1,4 @@
+from ctypes.wintypes import CHAR
 import json
 import csv
 import pandas as pd
@@ -749,6 +750,7 @@ def fetch_item_location(request):
                     l_dict[col]=val[count]
                     count=count+1
                 res_list.append(l_dict)
+            print(res_list)
             if len(res_list)>0:
                 return JsonResponse(res_list, content_type="application/json",safe=False)
             else:
@@ -765,6 +767,7 @@ def sub_cost(request):
     if request.method == 'POST':
         try:
             data=json.loads(request.body)
+            print(data)
             data=data[0]
             if len(data["AMOUNT"])>0:
                 amount=int(data["AMOUNT"])
@@ -821,5 +824,142 @@ def sub_cost(request):
                     return JsonResponse({"status": 500, "message": "No Data Found"})
             else:
                 return JsonResponse({"status": 500, "message": "Please enter the valid amount"})
+        except Exception as error:
+            return JsonResponse({"status": 500, "message":str(error)})
+
+
+
+#Fetching the data from SYSTEM_CONFIG based on the input parameters:
+@csrf_exempt            
+def system_config_creation(request):
+    if request.method == 'POST':
+        try:
+            json_object = json.loads(request.body)
+            json_object=json_object[0]
+            print(json_object)
+            mycursor = connection.cursor()
+            keys=[]
+            for key in json_object:
+                if json_object[key]=="NULL" or json_object[key]=="":
+                    keys.append(key)
+                if key=="TRN_TYPE":
+                    json_object[key]=json_object[key].upper()
+                if int(json_object["AREF"])==0:
+                    return JsonResponse({"status": 500, "message": "AREF between 1 - 9"})
+            for k in keys:
+                json_object.pop(k)
+            TRN_TYPE=json_object["TRN_TYPE"]
+            AREF=json_object["AREF"]
+            if len(TRN_TYPE)==3 and len(AREF)==1:
+                query="select * from trn_type_dtl"
+                results55=pd.read_sql(query,connection) 
+                res_list=[]
+                rec={}
+                results55 =  results55.replace(np.NaN, "NULL", regex=True)
+                for val2 in results55.values:
+                    count=0
+                    for col4 in results55.columns:
+                        rec[col4]=val2[count]
+                        count=count+1
+                    res_list.append(rec.copy())
+                for rec5 in res_list:
+                    for key in rec5:
+                        if rec5["TRN_TYPE"]==json_object["TRN_TYPE"]:
+                            if rec5["AREF"]==json_object["AREF"]:
+                                return JsonResponse({"status": 500, "message": "Transaction combination already exists!"})
+                        if rec5["TRN_NAME"].upper()==json_object["TRN_NAME"].upper():
+                            return JsonResponse({"status": 500, "message": "Transaction name already exists!"})
+                        if rec5["TRN_TYPE"]==json_object["TRN_TYPE"]:
+                            if rec5["TRN_NAME"]==json_object["TRN_NAME"]:
+                                if rec5["AREF"]==json_object["AREF"]:
+                                    return JsonResponse({"status": 500, "message": "Transaction combination already exists!"})
+                data_list={}
+                for key in json_object:
+                    if key=="STCK_LDGR_APPL":
+                        if json_object[key]=="Y" or json_object[key]=="N":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for STCK_LDGR_APPL"})
+                    if key=="SOH_IMPACT":
+                        if json_object[key]=="A" or json_object[key]=="R" or json_object[key]=="N":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for SOH_IMPACT"})
+                    if key=="COST_USED":
+                        if json_object[key]=="S" or json_object[key]=="T":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for COST_USED"})
+                    if key=="PERIOD_INVT_TRAN":
+                        if json_object[key]=="Y" or json_object[key]=="N":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for PERIOD_INVT_TRAN"})
+                    if key=="INJECT_PERIOD":
+                        if json_object[key]=="D" or json_object[key]=="W" or json_object[key]=="M" or json_object[key]=="S":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for INJECT_PERIOD"})
+                    if key=="OVERRIDE_ACCUMULATE":
+                        if json_object[key]=="O" or json_object[key]=="A":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for OVERRIDE_ACCUMULATE"})
+                    if key=="HIER_LEVEL":
+                        if json_object[key]=="SKU" or json_object[key]=="HIER1" or json_object[key]=="HIER2" or json_object[key]=="HIER3":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for HIER_LEVEL"})
+                    if key=="FIN_APPL":
+                        if json_object[key]=="Y" or json_object[key]=="N":
+                            data_list[key]=json_object[key]
+                        else:
+                            return JsonResponse({"status": 500, "message": "Please enter the drop down values for FIN_APPL"})
+                    if key=="ACCT_REFERENCE":
+                        data_list[key]=json_object[key]
+                R_keys=[]
+                for key1 in json_object:
+                    if key1 in data_list:
+                        R_keys.append(key1) 
+                for key2 in R_keys:
+                    json_object.pop(key2)
+                R_keys.clear()
+                data_list["TRN_TYPE"]=json_object["TRN_TYPE"]
+                data_list["AREF"]=json_object["AREF"]
+                #print("TRN_TYPE",TRN_TYPE)
+                #print("json_object",json_object)
+                cols=",".join(map(str, data_list.keys()))
+                v_list=[]
+                val=') VALUES('
+                for v in data_list.values():
+                    if v== None:
+                        val=val+'NULL,'
+                    else:
+                        v_list.append(v)
+                        val=val+'%s,'
+                val=val[:-1]+')'
+                query="insert into system_config (" +cols + val
+                #print(v_list)
+                #print(query)
+                mycursor.execute(query,v_list)
+                connection.commit()
+                cols1=",".join(map(str, json_object.keys()))
+                v_list1=[]
+                val1=') VALUES('
+                for v in json_object.values():
+                    if v== None:
+                        val1=val1+'NULL,'
+                    else:
+                        v_list1.append(v)
+                        val1=val1+'%s,'
+                val1=val1[:-1]+')'
+                query1="insert into trn_type_dtl (" +cols1 + val1
+                #print("vlist1",v_list1)
+                #print(query1)
+                mycursor.execute(query1,v_list1)
+                connection.commit()
+                return JsonResponse({"status": 201, "message": "Data Inserted"})
+            else:
+                return JsonResponse({"status": 500, "message": "TRN TYPE length should be 3 and AREF length should be 1"})
         except Exception as error:
             return JsonResponse({"status": 500, "message":str(error)})

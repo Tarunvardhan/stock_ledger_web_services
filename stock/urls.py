@@ -18,9 +18,9 @@ from django.urls import path
 from stock_ledger_models.views_err import err_trn,del_err_trn_data,err_trn_data_table
 from stock_ledger_models.views_daily import count_pndg_dly_rollup,daily_sku_table,daily_rollup_table,daily_rec_table,Daily_view
 from stock_ledger_models.views_stage import count_stg_trn_data,stg_trn,retrieve_stg,retrieve_err_stg,stg_fin
-from stock_ledger_models.views_global import cancel_transaction,system_conf,location_valid,currency_valid,item_location_valid,get_cost_item_location,cost_update_stg,lov_item_dtl,system_config_table,fetch_item_location,sub_cost
+from stock_ledger_models.views_global import cancel_transaction,system_conf,location_valid,currency_valid,item_location_valid,get_cost_item_location,cost_update_stg,lov_item_dtl,system_config_table,fetch_item_location,sub_cost,system_config_creation
 from stock_ledger_models.views_tran import count_trn_data,trn_data_table,trn_data_history_table,trn_data_rev_table,trn_data_rev_1_table,trn_type_dtl_table,trn_type_dtl_list
-from stock_ledger_models.views import sample,GL_ACCOUNT_table,GL_ACCOUNT_update,GL_ACCOUNT_INSERT,item_valid,currency_gl
+from stock_ledger_models.views import sample,GL_ACCOUNT_table,GL_ACCOUNT_update,GL_ACCOUNT_INSERT,item_valid,currency_gl,primary_gl
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -61,5 +61,7 @@ urlpatterns = [
     path('trn_type_dtl_list/',trn_type_dtl_list),
     path('Daily_view/',Daily_view),
     path('subledger_cost/',sub_cost),
+    path('system_config_creation/',system_config_creation),
+    path('primary_gl/',primary_gl),
     path('test/',sample)
 ]
